@@ -1,8 +1,33 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
-  /* Definimos los colores base del diseño para mantener consistencia */
-  --color-brand-primary: #3cb396; /* Tono aproximado del verde principal */
-    --color-brand-dark: #2a9d8f;
-    --color-brand-light: #64d2b4;
+  /* Definimos tus colores de marca*/
+  --color-brand-primary: #3CB396;
+  --color-brand-dark: #2A9D8F;
+  --color-brand-light: #64D2B4;
+
+  /* Colores Semánticos (Estos se adaptan) */
+  --color-bg-canvas: var(--bg-canvas);
+  --color-bg-surface: var(--bg-surface);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-base: var(--border-base);
+}
+
+/* ☀️ MODO CLARO (Default) */
+:root {
+  --bg-canvas: #f8fafc;       /* Fondo general */
+  --bg-surface: #ffffff;      /* Tarjetas, inputs, modales */
+  --text-main: #1e293b;       /* Texto principal (casi negro) */
+  --text-muted: #94a3b8;      /* Texto secundario (gris) */
+  --border-base: #e2e8f0;     /* Bordes suaves */
+}
+
+/* 🌙 MODO OSCURO (Se activa con la clase .dark) */
+.dark {
+  --bg-canvas: #0f172a;       /* Slate 900 */
+  --bg-surface: #1e293b;      /* Slate 800 */
+  --text-main: #f1f5f9;       /* Slate 100 */
+  --text-muted: #94a3b8;      /* Slate 400 */
+  --border-base: #334155;     /* Slate 700 */
 }
