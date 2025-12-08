@@ -30,10 +30,8 @@ export const LoginPage = () => {
 
                         <Input
                             label="Contraseña"
-                            type={showPassword ? "text" : "password"}
                             placeholder="Contraseña"
-                            icon={showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            onIconClick={() => setShowPassword(!showPassword)}
+                            iconType="password"
                         />
 
                         <div className="w-full text-right -mt-2.5">
@@ -42,7 +40,7 @@ export const LoginPage = () => {
                             </a>
                         </div>
 
-                        <Button type="submit" className="mt-4">
+                        <Button type="submit" className="mt-4" >
                             Iniciar sesión
                         </Button>
                     </form>

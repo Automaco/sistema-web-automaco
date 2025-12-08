@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from 'react';
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'outline';
 }
-
+// Añadir parametro de cambio de cambio  de colores
 export const Button = ({ children, variant = 'primary', className, ...props }: ButtonProps) => {
     const baseStyles = "w-full py-2.5 rounded-full font-semibold transition-all duration-300 cursor-pointer";
 
