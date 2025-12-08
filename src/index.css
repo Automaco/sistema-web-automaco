@@ -1,1 +1,8 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  /* Definimos los colores base del diseño para mantener consistencia */
+  --color-brand-primary: #3cb396; /* Tono aproximado del verde principal */
+    --color-brand-dark: #2a9d8f;
+    --color-brand-light: #64d2b4;
+}
