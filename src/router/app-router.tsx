@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout } from '../layouts/auth.layout';
-import { LoginPage } from '../features/auth/pages/login';
+import { LoginPage, AccountListPage, SelectProviderPage } from '../features/auth/pages/index';
+import { NotFoundPage } from '../features/404';
 
 export const router = createBrowserRouter([
     {
@@ -8,6 +9,8 @@ export const router = createBrowserRouter([
         // Redirigir la raíz a /auth/login automáticamente
         element: <Navigate to="/auth/login" replace />,
     },
+
+    // Autenticación (Login, Registro, Recuperación)
     {
         path: '/auth',
         element: <AuthLayout />,
@@ -16,16 +19,37 @@ export const router = createBrowserRouter([
                 path: 'login',
                 element: <LoginPage />,
             },
-            // Aquí agregarás más rutas en el futuro:
-            // {
-            //   path: 'register',
-            //   element: <RegisterPage />,
-            // },
+            // Futuro: 
+            // { path: 'register', element: <RegisterPage /> },
+            // { path: 'forgot-password', element: <ForgotPasswordPage /> },
         ],
     },
-    // Capturar rutas no existentes (404)
+
+    // Selección de Cuentas
+    {
+        path: '/accounts',
+        element: <AuthLayout />,
+        children: [
+            {
+                path: 'select-account',
+                element: <AccountListPage />,
+            },
+            {
+                path: 'select-provider',
+                element: <SelectProviderPage />,
+            },
+        ],
+    },
+
+    // GRUPO 3: Manejo de Errores (404)
     {
         path: '*',
-        element: <div>404 - Página no encontrada</div>,
+        element: <AuthLayout />, // Reutilizamos el diseño base
+        children: [
+            {
+                path: '*',
+                element: <NotFoundPage />, // Cargamos tu nueva tarjeta de error
+            }
+        ]
     }
 ]);

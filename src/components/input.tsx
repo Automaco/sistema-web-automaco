@@ -1,83 +1,130 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 import { useState } from 'react';
-import { Eye, EyeOff, Mail } from 'lucide-react'; // Iconos
+import { Eye, EyeOff } from 'lucide-react';
 
-type IconType = 'password' | 'email'; // Uso de iconos
-
+// ==========================================
+// 1. INPUT GENÉRICO 
+// ==========================================
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
-    iconType?: IconType; // 1. contraseña y 2. Email
+    icon?: ReactNode;
     onIconClick?: () => void;
+    error?: string;
 }
 
-/* Diseño de input standar */
-/* Para utilizar los iconos, especifica en la propiedad del input
-iconType = "password" || iconType = "email"*/
-
-export const Input = ({ label, iconType, onIconClick, className, type = "text", ...props }: InputProps) => {
-    // Logica de los iconos
-    // Estado local para manejar la visibilidad de la contraseña
-    const [showPassword, setShowPassword] = useState(false);
-
-    // Logica para determinar el tipo de input a utilzar
-    const currentType = iconType === 'password'
-        ? (showPassword ? "text" : "password")
-        : type;
-
-    const renderIcon = () => {
-        if (iconType === 'email') {
-            return <Mail className="w-5 h-5" />;
-        }
-
-        if (iconType === 'password') {
-            return showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />;
-        }
-
-        return null;
-    };
-    // Manejador del click en el icono (solo para password)
-    const handleIconClick = () => {
-        if (iconType === 'password') {
-            setShowPassword(!showPassword);
-        }
-    };
+export const Input = ({ label, icon, onIconClick, error, className, ...props }: InputProps) => {
     return (
         <div className="flex flex-col gap-1.5 w-full">
-            <label className="text-sm font-medium text-gray-400 ml-1 text-left">
+            <label className="text-sm font-medium text-text-muted ml-1 text-left transition-colors">
                 {label}
             </label>
-            <div className="relative">
+
+            <div className="relative group">
                 <input
-                    type={currentType}
                     className={`
                         w-full 
                         font-normal
-                        text-left text-gray-600           
-                        border border-gray-300             
-                        hover:border-gray-400            
-                        rounded-lg px-4 py-2.5 
-                        focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary
-                        transition-all 
+                        text-left 
+                        bg-bg-surface text-text-main
+                        
+                        /* Lógica de Borde: Si hay error es ROJO, si no es el base */
+                        border 
+                        ${error
+                            ? 'border-red-500 focus:ring-red-500/30 focus:border-red-500'
+                            : 'border-border-base focus:ring-brand-primary/50 focus:border-brand-primary hover:border-brand-primary/50'
+                        }
+
+                        rounded-lg py-2.5 
+                        pl-4
+                        ${icon ? 'pr-10' : 'pr-4'}
+                        
+                        placeholder:text-text-muted/50
+                        focus:outline-none 
+                        focus:ring-2 
+                        transition-all duration-200
                         ${className}
                     `}
                     {...props}
                 />
-                {iconType && (
-                    <button
-                        type="button"
-                        onClick={handleIconClick}
-                        // Solo permitimos click si es password, si es email deshabilitamos interacción
-                        className={`
-                            absolute right-3 top-1/2 -translate-y-1/2 
-                            text-gray-400 hover:text-gray-600 
-                            transition-colors
-                            ${iconType === 'password' ? 'cursor-pointer' : 'cursor-default pointer-events-none'}
-                        `}
+
+                {icon && (
+                    <div
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 ${error ? 'text-red-400' : 'text-text-muted'} ${onIconClick ? 'cursor-pointer hover:text-text-main' : 'pointer-events-none'}`}
+                        onClick={onIconClick}
                     >
-                        {renderIcon()}
-                    </button>
+                        {icon}
+                    </div>
                 )}
             </div>
+
+            {/* Mensaje de Error debajo del input */}
+            {error && (
+                <span className="text-xs text-red-500 ml-1 text-left animate-pulse">
+                    {error}
+                </span>
+            )}
+        </div>
+    );
+};
+
+// ==========================================
+// 2. INPUT DE CONTRASEÑA
+// ==========================================
+// Hacemos lo mismo aquí: agregamos la prop 'error'
+type PasswordInputProps = Omit<InputProps, 'type' | 'icon'>;
+
+export const PasswordInput = ({ label, error, className, ...props }: PasswordInputProps) => {
+    const [showPassword, setShowPassword] = useState(false);
+
+    return (
+        <div className="flex flex-col gap-1.5 w-full">
+            <label className="text-sm font-medium text-text-muted ml-1 text-left transition-colors">
+                {label}
+            </label>
+
+            <div className="relative group">
+                <input
+                    type={showPassword ? "text" : "password"}
+                    className={`
+                        w-full 
+                        font-normal
+                        text-left 
+                        bg-bg-surface text-text-main
+                        
+                        /* Borde condicional */
+                        border 
+                        ${error
+                            ? 'border-red-500 focus:ring-red-500/30 focus:border-red-500'
+                            : 'border-border-base focus:ring-brand-primary/50 focus:border-brand-primary hover:border-brand-primary/50'
+                        }
+
+                        rounded-lg py-2.5 
+                        pl-4 pr-10
+                        
+                        placeholder:text-text-muted/50
+                        focus:outline-none 
+                        focus:ring-2 
+                        transition-all duration-200
+                        ${className}
+                    `}
+                    {...props}
+                />
+
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${error ? 'text-red-400' : 'text-text-muted'} hover:text-text-main cursor-pointer transition-colors p-1`}
+                >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+            </div>
+
+            {/* Mensaje de Error */}
+            {error && (
+                <span className="text-xs text-red-500 ml-1 text-left">
+                    {error}
+                </span>
+            )}
         </div>
     );
 };

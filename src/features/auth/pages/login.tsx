@@ -1,25 +1,24 @@
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
-import { Input, Button } from '../../../components/index';
+import { Mail } from 'lucide-react'; // Importamos el icono para el input general
+// Importamos ambos inputs
+import { Input, PasswordInput, Button } from '../../../components/index'; 
 import { useLogin } from '../hooks/use-login';
 
 export const LoginPage = () => {
-    // Usamos el hook para toda la lógica
     const {
         formData,
-        showPassword,
+        errors,
         isLoading,
-        togglePasswordVisibility,
         handleInputChange,
         handleSubmit
     } = useLogin();
 
     return (
-        // Contenedor principal Grid: Izquierda (Blanco/Oscuro) | Derecha (Transparente)
+        // Contenedor principal
         <div className="flex h-screen w-full overflow-hidden">
 
             {/* SECCIÓN IZQUIERDA: Formulario */}
-            {/* CAMBIO: bg-white -> bg-bg-surface (Para que cambie a oscuro) */}
+            {/* bg-bg-surface: Se vuelve blanco en Light, Slate-800 en Dark */}
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-bg-surface relative z-10 rounded-tr-[3vw] rounded-br-[4vw] transition-colors duration-300">
                 <div className="w-full max-w-sm flex flex-col items-center">
 
@@ -27,35 +26,40 @@ export const LoginPage = () => {
                         <h1 className="text-4xl font-bold text-brand-primary mb-2">
                             ¡Bienvenido de vuelta! <br /> Inicia sesión
                         </h1>
-                        {/* CAMBIO: text-brand-primary (era un poco fuerte) -> text-text-muted (gris adaptable) */}
+                        {/* text-text-muted: Gris adaptable */}
                         <p className="text-text-muted">
                             Ingrese sus datos para iniciar sesión
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
+                        
+                        {/* 1. INPUT GENERAL (Con icono opcional) */}
                         <Input
                             label="Correo electrónico"
                             name="email"
                             type="email"
-                            placeholder="Correo electrónico"
+                            placeholder="nombre@ejemplo.com"
                             value={formData.email}
                             onChange={handleInputChange}
+                            // Aquí pasamos el icono como componente, mucho más flexible
+                            icon={<Mail size={20} />} 
+                            error={errors.email}
                         />
 
-                        <Input
+                        {/* 2. INPUT DE CONTRASEÑA (Separado) */}
+                        <PasswordInput
                             label="Contraseña"
                             name="password"
-                            placeholder="Contraseña"
+                            placeholder="••••••••"
                             value={formData.password}
-                            iconType="password"
+                            onChange={handleInputChange}
+                            error={errors.password}
                         />
 
                         <div className="w-full text-right -mt-2">
-                            {/* CAMBIO: text-gray-400 -> text-text-muted */}
                             <a href="#" className="text-xs text-text-muted hover:text-brand-primary transition-colors">
-                                {/* CAMBIO: text-gray-600 -> text-text-main */}
-                                ¿Se te ha olvidado tu cuenta? <span className="text-text-main font-medium">Recuperar contraseña</span>
+                                ¿Se te ha olvidado tu cuenta? <span className="text-text-main font-medium hover:underline">Recuperar contraseña</span>
                             </a>
                         </div>
 
@@ -64,11 +68,9 @@ export const LoginPage = () => {
                         </Button>
                     </form>
 
-                    {/* En Móvil, mostramos la opción de registro aquí */}
-                    {/* CAMBIO: text-gray-400 -> text-text-muted */}
+                    {/* Footer Móvil */}
                     <div className="mt-6 text-sm text-text-muted lg:hidden">
                         <p>
-                            {/* CAMBIO: text-gray-700 -> text-text-main (solo para el link) */}
                             ¿No tienes cuenta? <Link to="/auth/register" className="text-text-main font-bold hover:underline hover:text-brand-primary ml-1">Crea tu cuenta</Link>
                         </p>
                     </div>
@@ -76,7 +78,7 @@ export const LoginPage = () => {
             </div>
 
             {/* SECCIÓN DERECHA: Promoción */}
-            {/* NOTA: Aquí mantenemos text-white porque el fondo siempre es verde/gradiente, incluso en modo oscuro */}
+            {/* Esta sección mantiene sus colores fijos (blanco sobre verde) */}
             <div className="hidden lg:flex flex-col relative items-center justify-center p-12 text-center text-white z-10">
 
                 <h2 className="text-4xl xl:text-5xl font-bold mb-2 drop-shadow-md">
