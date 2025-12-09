@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '../hook/use-theme';
+import { useTheme } from '../context/theme-context';
 
 // Login
 const LoginBackground = () => (
