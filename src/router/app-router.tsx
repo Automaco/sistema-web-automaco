@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { AuthLayout } from '../layouts/auth.layout';
-import { LoginPage, AccountListPage, SelectProviderPage } from '../features/auth/pages/index';
+import { AuthLayout, PrivateLayout } from '../layouts/index';
+import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage } from '../features/auth/pages/index';
+import { DownloadDTEsPage } from '../features/private/pages/index';
 import { NotFoundPage } from '../features/404';
 
 export const router = createBrowserRouter([
@@ -20,7 +21,7 @@ export const router = createBrowserRouter([
                 element: <LoginPage />,
             },
             // Futuro: 
-            // { path: 'register', element: <RegisterPage /> },
+            { path: 'register', element: <RegisterPage /> },
             // { path: 'forgot-password', element: <ForgotPasswordPage /> },
         ],
     },
@@ -41,14 +42,27 @@ export const router = createBrowserRouter([
         ],
     },
 
-    // GRUPO 3: Manejo de Errores (404)
+    //DTES
+    {
+        path: '/dtes',
+        element: <PrivateLayout />,
+        children: [
+            {
+                path: '',
+                element: <DownloadDTEsPage />,
+            
+            }
+        ]
+    },
+
+    // Manejo de Errores (404)
     {
         path: '*',
-        element: <AuthLayout />, // Reutilizamos el diseño base
+        element: <AuthLayout />, 
         children: [
             {
                 path: '*',
-                element: <NotFoundPage />, // Cargamos tu nueva tarjeta de error
+                element: <NotFoundPage />, 
             }
         ]
     }
