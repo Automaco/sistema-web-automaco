@@ -1,4 +1,5 @@
 export * from "./login";
+export * from "./create-account"
 export * from "./activate-account";
 export * from "./create-account";
 export * from "./recover-password";

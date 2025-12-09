@@ -5,14 +5,15 @@ import { useNavigate } from 'react-router-dom';
 interface FormErrors {
     email?: string;
     password?: string;
+    confirmPassword?: string;
+    text?: string;
 }
 
-//NECESITA MEJORA I KNOW
-export const useLogin = () => {
+export const useRegister = () => {
     const navigate = useNavigate();
 
     // Estados
-    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [formData, setFormData] = useState({ email: '', password: '', text: '', confirmPassword: '' });
     const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
     const [isLoading, setIsLoading] = useState(false);
 
@@ -38,17 +39,26 @@ export const useLogin = () => {
 
         // 1. Validaciones previas
         const newErrors: FormErrors = {};
-
+        if (!formData.text) {
+            newErrors.text = "Campo obligatorio";
+        }
         if (!formData.email) {
             newErrors.email = "El correo es obligatorio";
         } else if (!validateEmail(formData.email)) {
             newErrors.email = "El formato del correo no es válido";
         }
-        // Campo de contraseña obligatorio
+        //Campo de contraseña obligatorio
         if (!formData.password) {
             newErrors.password = "La contraseña es obligatoria";
         } else if (formData.password.length < 8) {
             newErrors.password = "La contraseña debe tener al menos 8 caracteres";
+        }
+
+        //Validar Confirmación de Contraseña (Coincidencia)
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = "Debes confirmar la contraseña";
+        } else if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = "Las contraseñas no coinciden";
         }
 
         // Si hay errores, los seteamos y detenemos el envío
