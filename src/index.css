@@ -1,33 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  /* Definimos tus colores de marca*/
+  /* Colores de Marca */
   --color-brand-primary: #3CB396;
   --color-brand-dark: #2A9D8F;
   --color-brand-light: #64D2B4;
 
-  /* Colores Semánticos (Estos se adaptan) */
+  /* Variables del Sistema */
   --color-bg-canvas: var(--bg-canvas);
   --color-bg-surface: var(--bg-surface);
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
   --color-border-base: var(--border-base);
+  
+  --color-card-bg: var(--card-bg); 
+  --color-text-adaptive: var(--color-text);
 }
 
-/* ☀️ MODO CLARO (Default) */
+/* MODO CLARO */
 :root {
-  --bg-canvas: #f8fafc;       /* Fondo general */
-  --bg-surface: #ffffff;      /* Tarjetas, inputs, modales */
-  --text-main: #1e293b;       /* Texto principal (casi negro) */
-  --text-muted: #94a3b8;      /* Texto secundario (gris) */
-  --border-base: #e2e8f0;     /* Bordes suaves */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #94a3b8;
+  --border-base: #e2e8f0;
+  
+  --card-bg: #ffffff; 
+  --color-text: #ffffff; 
 }
 
-/* 🌙 MODO OSCURO (Se activa con la clase .dark) */
+/* MODO OSCURO */
 .dark {
-  --bg-canvas: #0f172a;       /* Slate 900 */
-  --bg-surface: #1e293b;      /* Slate 800 */
-  --text-main: #f1f5f9;       /* Slate 100 */
-  --text-muted: #94a3b8;      /* Slate 400 */
-  --border-base: #334155;     /* Slate 700 */
+  --bg-canvas: #0f172a;
+  --bg-surface: #1e293b;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-base: #334155;
+  
+  --card-bg: rgba(30, 41, 59, 0.95); 
+  --color-text: #1e293b;
 }

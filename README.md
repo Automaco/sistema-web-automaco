@@ -30,6 +30,20 @@ src/
 ```
 
 ---
+# 🚌 Rutas del proyecto
+
+* **INICIO**
+Login: /auth/login
+Registro: /auth/register
+
+* **CUENTA**
+Seleccionar cuenta: /accounts/select-account
+Agregar cuenta: /accounts/select-provider
+
+* **LOGEADO**
+Descarga de archivos: /dtes
+
+---
 
 # 🧩 Estándares de nombrado
 

@@ -72,21 +72,37 @@ export const AuthLayout = () => {
         }
     };
 
+    const renderButtonToggleTheme = () => {
+        switch (location.pathname) {
+            case '/auth/login':
+                return <button
+                    onClick={toggleTheme}
+                    className="absolute top-5 right-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>;
+            case '/auth/register':
+                return <button
+                    onClick={toggleTheme}
+                    className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+            default:
+                return <LoginBackground />;
+        }
+    };
+
     return (
         <div className="relative min-h-screen w-full overflow-hidden font-sans">
 
-            {/* 🎨 LAYER 0: Fondo Dinámico */}
+            {/* Fondo*/}
             {renderBackground()}
 
-            {/* 🔘 BOTÓN FLOTANTE PARA CAMBIAR TEMA */}
-            <button
-                onClick={toggleTheme}
-                className="absolute top-5 right-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
-            >
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
+            {/*  BOTÓN FLOTANTE PARA CAMBIAR TEMA */}
+            {renderButtonToggleTheme()}
 
-            {/* 📦 LAYER 1: Contenido (Outlet) */}
+            {/* Contenido (Outlet) */}
             {/* Usamos flex items-center justify-center para centrar el contenido en pantalla */}
             <div className="relative z-10 min-h-screen flex items-center justify-center">
                 <Outlet />
