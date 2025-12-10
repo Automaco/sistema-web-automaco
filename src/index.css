@@ -40,3 +40,43 @@
   --card-bg: rgba(30, 41, 59, 0.95); 
   --color-text: #1e293b;
 }
+
+/* --- ANIMACIONES PERSONALIZADAS --- */
+
+/* Flotar suavemente (arriba/abajo) */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+/* Flotar lateralmente y vertical (movimiento orgánico) */
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(10px, -10px); }
+  66% { transform: translate(-5px, 5px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Clases de utilidad para usar en el HTML */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-drift {
+  animation: drift 10s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift 15s ease-in-out infinite;
+}
+
+/* Retrasos para que no se muevan todos al mismo tiempo */
+.delay-1000 { animation-delay: 1s; }
+.delay-2000 { animation-delay: 2s; }
+.delay-3000 { animation-delay: 3s; }
+.delay-4000 { animation-delay: 4s; }
+.delay-5000 { animation-delay: 5s; }

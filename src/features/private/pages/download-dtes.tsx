@@ -1,4 +1,4 @@
-import { Download, ChevronDown, ChevronRight, FileText, Check, X } from 'lucide-react';
+import { Download, ChevronDown, ChevronRight, FileText, Check, X, Calendar } from 'lucide-react';
 import { Button } from '../../../components/button';
 import { MOCK_DTES } from '../data/mock-dtes';
 import { useDteSelection } from '../hooks/use-dte-selection';
@@ -51,14 +51,17 @@ export const DownloadDTEsPage = () => {
 
                             {/* --- NIVEL AÑO --- */}
                             <div
-                                className="flex items-center gap-4 p-4 bg-bg-canvas/50 hover:bg-bg-canvas cursor-pointer transition-colors select-none"
+                                className="flex items-center gap-3 p-4 bg-bg-canvas/50 hover:bg-bg-canvas cursor-pointer transition-colors select-none"
                                 onClick={() => toggleExpand(String(yearGroup.year))}
                             >
+                                
                                 <CheckboxIcon
                                     checked={isYearSelected(yearGroup.year)}
                                     onClick={() => toggleYearSelection(yearGroup.year)}
                                 />
-                                <span className="font-bold text-text-adaptive text-lg flex-1">
+                                <Calendar size={20} className="text-brand-primary"/> 
+                                <span className="font-bold text-brand-primary text-lg flex-1">
+                                    
                                     {yearGroup.year}
                                 </span>
                                 {expandedItems.includes(String(yearGroup.year))
@@ -101,7 +104,7 @@ export const DownloadDTEsPage = () => {
                                                                 className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isSelected ? 'bg-brand-primary/5 border-brand-primary/40 shadow-sm' : 'bg-bg-surface border-border-base hover:border-brand-primary/30'}`}
                                                                 onClick={() => toggleFileSelection(file.id)}
                                                             >
-                                                                <CheckboxIcon checked={isSelected} />
+                                                                <CheckboxIcon checked={isSelected} onClick={() => toggleFileSelection(file.id)} />
                                                                 <div className={`p-2 rounded-lg ${isSelected ? 'bg-red-100 text-red-600' : 'bg-bg-canvas text-text-muted'}`}>
                                                                     <FileText size={20} />
                                                                 </div>
