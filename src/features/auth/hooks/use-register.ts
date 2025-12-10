@@ -75,7 +75,7 @@ export const useRegister = () => {
             // Simulación de API
             setTimeout(() => {
                 setIsLoading(false);
-                navigate('/dashboard');
+                navigate('/auth/login');
             }, 1000);
         } catch (error) {
             console.error(error);

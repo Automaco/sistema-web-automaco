@@ -62,6 +62,7 @@ export const RegisterPage = () => {
                             placeholder="Nombre"
                             value={formData.text}
                             onChange={handleInputChange}
+                            error={errors.text}
                         />
 
                         {/* 2. INPUT GENERAL (Con icono opcional) */}
@@ -93,7 +94,7 @@ export const RegisterPage = () => {
                             placeholder="••••••••"
                             value={formData.confirmPassword}
                             onChange={handleInputChange}
-                            error={errors.password}
+                            error={errors.confirmPassword}
                         />
 
                         <Button type="submit" className="mt-4" disabled={isLoading} >

@@ -20,7 +20,6 @@ export const router = createBrowserRouter([
                 path: 'login',
                 element: <LoginPage />,
             },
-            // Futuro: 
             { path: 'register', element: <RegisterPage /> },
             // { path: 'forgot-password', element: <ForgotPasswordPage /> },
         ],

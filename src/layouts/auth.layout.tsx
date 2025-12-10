@@ -62,8 +62,90 @@ const LoginBackground = () => (
 
 // 2. Registro
 const RegisterBackground = () => (
-    <div className="fixed inset-0 z-0 bg-linear-to-br from-[#4CBE98] to-[#3BB19B]">
+    <div className="absolute inset-0 w-full h-full bg-brand-primary overflow-hidden z-0">
+        <svg
+            className="absolute w-full h-full pointer-events-none"
+            xmlns="http://www.w3.org/2000/svg"
+            width="100%"
+            height="100%"
+        >
+            {/* === DEFINICIONES === */}
+            <defs>
+                <pattern id="dot-pattern" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1.5" className="fill-white/30" />
+                </pattern>
+            </defs>
 
+            {/* ==========================================
+            FORMAS DE ESQUINA (Posicionadas con %)
+           ========================================== */}
+
+            {/* Esquina Superior Izquierda (Círculo cortado) */}
+            <circle cx="0%" cy="0%" r="100" className="fill-white/5" />
+
+            {/* Esquina Superior Derecha (Arco grande) */}
+            <circle cx="50%" cy="0%" r="120" className="fill-white/5" />
+
+            {/* Esquina Inferior Derecha (Detalle pequeño) */}
+            <circle cx="50%" cy="90%" r="75" className="fill-white/5" />
+
+            {/* Esquina Inferior Izquierda (Base grande difuminada) */}
+            <circle cx="5%" cy="100%" r="120" className="fill-white/10" />
+
+
+            {/* ==========================================
+            ELEMENTOS FLOTANTES (Pequeños y sutiles)
+           ========================================== */}
+
+            {/* -- GRUPO ARRIBA DERECHA -- */}
+            {/* Círculo sólido pequeño */}
+            <circle cx="85%" cy="15%" r="8" className="fill-white/20" />
+            <circle cx="85%" cy="15%" r="8" className="fill-white/20" />
+            {/* Líneas decorativas (Rectángulos redondeados) */}
+            <rect x="88%" y="22%" width="40" height="4" rx="2" className="fill-white/10" />
+            <rect x="92%" y="24%" width="20" height="4" rx="2" className="fill-white/10" />
+
+
+            {/* -- GRUPO CENTRO -- */}
+            {/* Triángulo flotante (Usamos un path pequeño) */}
+            {/* Para posicionar un path con %, usamos un <svg> anidado que actúe como contenedor */}
+            <svg x="45%" y="20%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+            <svg x="25%" y="70%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+            <svg x="45%" y="55%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+
+            {/* Círculo hueco (aro) */}
+            <circle cx="30%" cy="40%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+            <circle cx="20%" cy="10%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+            <circle cx="60%" cy="70%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+
+            {/* -- GRUPO ABAJO DERECHA -- */}
+            {/* Triángulo invertido */}
+            <svg x="80%" y="75%" overflow="visible">
+                <path d="M 0 0 L 20 0 L 10 20 Z" className="fill-white/10" transform="rotate(-15)" />
+
+            </svg>
+            <circle cx="90%" cy="85%" r="5" className="fill-white/30" />
+            <circle cx="100%" cy="50%" r="3" className="fill-white/30" />
+
+            {/* -- GRUPO ABAJO IZQUIERDA -- */}
+            {/* Líneas pequeñas */}
+            <rect x="15%" y="65%" width="50" height="3" rx="1.5" className="fill-white/10" />
+            <rect x="15%" y="67%" width="30" height="3" rx="1.5" className="fill-white/10" />
+
+            {/* Patrón de puntos (Grid) */}
+            {/* Lo colocamos en coordenadas fijas desde abajo/izquierda */}
+            <rect x="5%" y="82%" width="80" height="80" fill="url(#dot-pattern)" className="opacity-60" />
+
+        </svg>
+
+        {/* Gradiente Overlay para suavizar todo */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none" />
     </div>
 );
 
