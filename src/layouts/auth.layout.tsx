@@ -172,7 +172,9 @@ export const AuthLayout = () => {
             case '/auth/register':
                 return <RegisterBackground />;
             case '/auth/recover-password':
-                return <RecoverPasswordBackground />;
+                return <RegisterBackground />;
+            case '/auth/reset-password':
+                return <RegisterBackground />;
             default:
                 return <LoginBackground />;
         }

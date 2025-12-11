@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout, PrivateLayout } from '../layouts/index';
-import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage } from '../features/auth/pages/index';
+import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage, ResetPasswordPage } from '../features/auth/pages/index';
 import { DownloadDTEsPage } from '../features/private/pages/index';
 import { NotFoundPage } from '../features/404';
 
@@ -21,7 +21,9 @@ export const router = createBrowserRouter([
                 element: <LoginPage />,
             },
             { path: 'register', element: <RegisterPage /> },
+            // Recuperacion de contraseña
             { path: 'recover-password', element: <RecoverPasswordPage /> },
+            { path: 'reset-password', element: <ResetPasswordPage /> },
         ],
     },
 

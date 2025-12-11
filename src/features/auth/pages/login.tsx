@@ -58,7 +58,7 @@ export const LoginPage = () => {
                         />
 
                         <div className="w-full text-center -mt-2">
-                            <Link to="/auth/Recover-Password" className="text-xs text-text-muted hover:text-brand-primary transition-colors">
+                            <Link to="/auth/recover-password" className="text-xs text-text-muted hover:text-brand-primary transition-colors">
                                 ¿Se te ha olvidado tu cuenta? <span className="text-text-main font-medium hover:underline">Recuperar contraseña</span>
                             </Link>
                         </div>
