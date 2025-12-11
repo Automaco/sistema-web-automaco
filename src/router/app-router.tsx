@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout, PrivateLayout } from '../layouts/index';
-import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage } from '../features/auth/pages/index';
+import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage } from '../features/auth/pages/index';
 import { DownloadDTEsPage } from '../features/private/pages/index';
 import { NotFoundPage } from '../features/404';
 
@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
                 element: <LoginPage />,
             },
             { path: 'register', element: <RegisterPage /> },
-            // { path: 'forgot-password', element: <ForgotPasswordPage /> },
+            { path: 'recover-password', element: <RecoverPasswordPage /> },
         ],
     },
 
@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
             {
                 path: '',
                 element: <DownloadDTEsPage />,
-            
+
             }
         ]
     },
@@ -57,11 +57,11 @@ export const router = createBrowserRouter([
     // Manejo de Errores (404)
     {
         path: '*',
-        element: <AuthLayout />, 
+        element: <AuthLayout />,
         children: [
             {
                 path: '*',
-                element: <NotFoundPage />, 
+                element: <NotFoundPage />,
             }
         ]
     }

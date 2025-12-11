@@ -58,9 +58,9 @@ export const LoginPage = () => {
                         />
 
                         <div className="w-full text-center -mt-2">
-                            <a href="#" className="text-xs text-text-muted hover:text-brand-primary transition-colors">
+                            <Link to="/auth/Recover-Password" className="text-xs text-text-muted hover:text-brand-primary transition-colors">
                                 ¿Se te ha olvidado tu cuenta? <span className="text-text-main font-medium hover:underline">Recuperar contraseña</span>
-                            </a>
+                            </Link>
                         </div>
 
                         <Button type="submit" className="mt-4" disabled={isLoading} >

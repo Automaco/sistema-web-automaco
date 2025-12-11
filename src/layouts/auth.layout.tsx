@@ -149,6 +149,15 @@ const RegisterBackground = () => (
     </div>
 );
 
+// Diseño de fondo para recuperar contraseña
+const RecoverPasswordBackground = () => (
+    <div className="fixed inset-0 w-full h-full z-0 overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+
+
+
+    </div>
+);
+
 // 3. Componente Principal Layout
 export const AuthLayout = () => {
     const { theme, toggleTheme } = useTheme();
@@ -156,11 +165,14 @@ export const AuthLayout = () => {
 
     // Función Switch para elegir fondo según la ruta
     const renderBackground = () => {
+
         switch (location.pathname) {
             case '/auth/login':
                 return <LoginBackground />;
             case '/auth/register':
                 return <RegisterBackground />;
+            case '/auth/recover-password':
+                return <RecoverPasswordBackground />;
             default:
                 return <LoginBackground />;
         }
@@ -182,8 +194,15 @@ export const AuthLayout = () => {
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
+            case '/auth/recover-password':
+                return <button
+                    onClick={toggleTheme}
+                    className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
             default:
-                return <LoginBackground />;
+                return <LoginBackground />; // Si cambio esta etiqueta, cambia el fondo de recover-password, de lo contrario no cambia nada
         }
     };
 
