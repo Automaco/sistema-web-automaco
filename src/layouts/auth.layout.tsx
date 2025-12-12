@@ -81,7 +81,7 @@ const RegisterBackground = () => (
            ========================================== */}
 
             {/* Esquina Superior Izquierda (Círculo cortado) */}
-            <circle cx="0%" cy="0%" r="100" className="fill-white/5" />
+            <circle cx="0%" cy="0%" r="100" className="fill-white/5 " />
 
             {/* Esquina Superior Derecha (Arco grande) */}
             <circle cx="50%" cy="0%" r="120" className="fill-white/5" />
@@ -151,10 +151,20 @@ const RegisterBackground = () => (
 
 // Diseño de fondo para recuperar contraseña
 const RecoverPasswordBackground = () => (
-    <div className="fixed inset-0 w-full h-full z-0 overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+    // 1. Contenedor base con el gradiente original
+    <div className="absolute inset-0 w-full h-full bg-brand-primary overflow-hidden z-0">
+        <div className="absolute h-full hidden md:flex flex-col justify-center items-center w-1/2 pointer-events-none pr-12">
+            <div className="absolute scale-140 -translate-y-35 -translate-x-15">
+                <img
+                    // REEMPLAZA ESTA URL CON TU IMAGEN.
+                    // Usa una imagen abstracta, patrones o algo relacionado a tu marca.
+                    src="../src/assets/sendEmail.svg"
+                    alt="Fondo decorativo"
+                    className="w-full h-full object-cover grayscale-[20%]"
+                />
+            </div>
 
-
-
+        </div>
     </div>
 );
 
@@ -172,9 +182,9 @@ export const AuthLayout = () => {
             case '/auth/register':
                 return <RegisterBackground />;
             case '/auth/recover-password':
-                return <RegisterBackground />;
+                return <RecoverPasswordBackground />;
             case '/auth/reset-password':
-                return <RegisterBackground />;
+                return <RecoverPasswordBackground />;
             default:
                 return <LoginBackground />;
         }
@@ -197,6 +207,13 @@ export const AuthLayout = () => {
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
             case '/auth/recover-password':
+                return <button
+                    onClick={toggleTheme}
+                    className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+            case '/auth/reset-password':
                 return <button
                     onClick={toggleTheme}
                     className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"

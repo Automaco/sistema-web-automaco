@@ -1,6 +1,7 @@
 // Pantalla de recuperacion de contraseña
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, X, CheckCircle2 } from 'lucide-react'; // Importamos el icono para el input general
+import { useState } from 'react';
 // Importamos ambos inputs
 import { Input, Button } from '../../../components/index';
 import { useRecoverPassword } from '../hooks/use-recover-password';
@@ -14,7 +15,10 @@ interface VerificationModalProps {
     isLoading: boolean;
     email: string;
 }
+
+
 const VerificationModal = ({ isOpen, onClose, onVerify, isLoading, email }: VerificationModalProps) => {
+    const [code, setCode] = useState("");
     // Si no está abierto, no renderizamos nada
     if (!isOpen) return null;
 
@@ -61,14 +65,28 @@ const VerificationModal = ({ isOpen, onClose, onVerify, isLoading, email }: Veri
                             type="text"
                             maxLength={6}
                             placeholder="000000"
+                            // 2. Vinculamos el valor al estado
+                            value={code}
+                            // 3. Propiedad vital para móviles (abre teclado numérico)
+                            inputMode="numeric"
                             className="w-full text-center text-3xl font-bold tracking-[0.5em] text-gray-800 border-b-2 border-gray-200 focus:border-brand-primary focus:outline-none py-2 transition-colors placeholder:text-gray-200"
+
+                            onChange={(e) => {
+                                const value = e.target.value;
+
+                                // 4. VALIDACIÓN ESTRICTA:
+                                // Solo actualizamos el estado si está vacío O si son solo dígitos
+                                if (value === '' || /^\d+$/.test(value)) {
+                                    setCode(value);
+                                }
+                            }}
                         />
                     </div>
 
                     {/* Botón de Confirmar */}
                     <Button
                         onClick={onVerify}
-                        disabled={isLoading}
+                        disabled={isLoading || code.length < 6} // Opcional: Deshabilitar si no son 6 dígitos
                         className="w-full h-11"
                     >
                         {isLoading ? 'Verificando...' : 'Confirmar código'}
@@ -122,7 +140,7 @@ export const RecoverPasswordPage = () => {
             {/* bg-bg-surface: Se vuelve blanco en Light, Slate-800 en Dark */}
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-bg-surface relative z-10 rounded-tl-[1vw] rounded-bl-[1vw] transition-colors duration-300">
                 <div className="w-full max-w-md flex flex-col items-center">
-
+ 
                     <div className="text-center mb-8">
                         <h1 className="text-4xl font-bold text-brand-primary mb-7">
                             ¿Olvidaste la contraseña?
