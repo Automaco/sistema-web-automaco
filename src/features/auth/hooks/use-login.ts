@@ -1,28 +1,25 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../../../services/auth.services';
 
-// Interfaz para el estado de errores
 interface FormErrors {
     email?: string;
     password?: string;
+    general?: string;
 }
 
-//NECESITA MEJORA I KNOW
 export const useLogin = () => {
     const navigate = useNavigate();
 
-    // Estados
     const [formData, setFormData] = useState({ email: '', password: '' });
-    const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
+    const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-
-        // Opcional: Limpiar el error cuando el usuario empieza a escribir de nuevo
-        if (errors[name as keyof FormErrors]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
+        if (errors.general || errors[name as keyof FormErrors]) {
+            setErrors(prev => ({ ...prev, [name]: undefined, general: undefined }));
         }
     };
 
@@ -34,13 +31,13 @@ export const useLogin = () => {
     };
 
     const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+        e.preventDefault()
 
         // 1. Validaciones previas
         const newErrors: FormErrors = {};
 
         if (!formData.email) {
-            newErrors.email = "El correo es obligatorio";
+            newErrors.email = "El correo electrónico es obligatorio";
         } else if (!validateEmail(formData.email)) {
             newErrors.email = "El formato del correo no es válido";
         }
@@ -57,27 +54,54 @@ export const useLogin = () => {
             return;
         }
 
-        // 2. Si todo está bien, procedemos
         setIsLoading(true);
+        setErrors({});
 
         try {
-            console.log('Enviando datos:', formData);
-            // Simulación de API
-            setTimeout(() => {
-                setIsLoading(false);
-                navigate('/dashboard');
-            }, 1000);
+            // LLAMADA LIMPIA
+            await authService.login(formData);
+            navigate('/dashboard');
+
         } catch (error) {
-            console.error(error);
+            console.error('Login failed', error);
+            let errorMessage = "Ocurrió un error inesperado";
+
+            // "Type Guard": Verificamos si es un Error real antes de usarlo
+            if (error instanceof Error) {
+                try {
+                    // Intentamos leer el JSON del error si viene del httpClient
+                    const parsed = JSON.parse(error.message);
+
+                    if (parsed.error === 'account_not_activated') {
+                        errorMessage = 'Tu cuenta no está activada.';
+                    } else if (parsed.message) {
+                        errorMessage = parsed.message;
+                    }
+                } catch {
+                    // Si no es JSON, usamos el mensaje directo
+                    errorMessage = error.message || "Error de conexión";
+                }
+            }
+
+            // Mapeo de mensajes amigables
+            if (errorMessage.includes('Credenciales inválidas') || errorMessage.includes('Unauthorized')) {
+                errorMessage = 'Correo o contraseña incorrectos.';
+            }
+
+            setErrors({ general: errorMessage });
+        } finally {
             setIsLoading(false);
         }
     };
 
+    const clearErrors = () => setErrors({});
+
     return {
         formData,
         errors,
-        isLoading,
+        isLoading, 
         handleInputChange,
-        handleSubmit
+        handleSubmit,
+        clearErrors
     };
 };

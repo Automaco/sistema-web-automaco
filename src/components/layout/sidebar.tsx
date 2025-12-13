@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { MENU_ITEMS, type UserRole, type MenuItem } from '../../constants/menu-items';
+import { ConfirmationModal } from '../../components/ui/confirmation-modal';
+import { authService } from '../../services/auth.services';
 
 // Mock del usuario
 const CURRENT_USER_ROLE: UserRole = 'admin';
@@ -11,12 +13,16 @@ export const Sidebar = () => {
     const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
     // Estado Mobile
     const [isMobileOpen, setIsMobileOpen] = useState(false);
-    
+
     const navigate = useNavigate();
 
     const toggleDesktopSidebar = () => setIsDesktopExpanded(!isDesktopExpanded);
     const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
     const closeMobileMenu = () => setIsMobileOpen(false);
+
+    // Estado del Modal de Logout
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // Filtro de items
     const filteredItems = MENU_ITEMS.filter(item => {
@@ -24,23 +30,53 @@ export const Sidebar = () => {
         return item.roles.includes(CURRENT_USER_ROLE);
     });
 
-    const handleLogout = () => navigate('/auth/login');
+    // 1. Manejador inicial: Solo abre el modal
+    const handleLogoutClick = () => {
+        setIsLogoutModalOpen(true);
+        // Si estamos en móvil, cerramos el menú para que se vea bien el modal
+        if (isMobileOpen) closeMobileMenu();
+    };
+
+    // 2. Acción Real: Ejecuta el logout y redirige
+    const confirmLogout = () => {
+        setIsLoggingOut(true); // Activa el spinner en el modal
+
+        setTimeout(() => {
+            setIsLoggingOut(false); // Desactiva el spinner
+            authService.logout(); 
+            setIsLogoutModalOpen(false);
+            navigate('/auth/login');
+        }, 1500);
+    };
 
     // Props comunes para reutilizar en ambos menús
     const commonProps = {
         items: filteredItems,
-        handleLogout,
+        handleLogout: handleLogoutClick,
         navigate
     };
 
     return (
         <>
+            {/* --- MODAL DE CONFIRMACIÓN --- */}
+            <ConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => !isLoggingOut && setIsLogoutModalOpen(false)} // Evita cerrar si está cargando
+                onConfirm={confirmLogout}
+                isLoading={isLoggingOut} 
+                type="danger" 
+                title="¿Cerrar sesión?"
+                description="¿Estás seguro de que quieres salir del sistema? Tendrás que volver a ingresar tus credenciales."
+                confirmText="Sí, salir"
+                cancelText="Cancelar"
+            />
+
             {/* =======================
                 MOBILE TRIGGER & MENU
                ======================= */}
             <div className="lg:hidden">
                 {/* Botón Hamburguesa Flotante */}
-                <button 
+                <button
                     onClick={toggleMobileMenu}
                     className="fixed top-4 left-4 z-50 p-2.5 bg-bg-surface text-brand-primary rounded-xl shadow-lg border border-border-base active:scale-95 transition-transform"
                 >
@@ -49,17 +85,17 @@ export const Sidebar = () => {
 
                 {/* Overlay Oscuro */}
                 {isMobileOpen && (
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
                         onClick={closeMobileMenu}
                     />
                 )}
 
                 {/* Drawer Móvil */}
-                <MobileDrawer 
-                    isOpen={isMobileOpen} 
-                    onClose={closeMobileMenu} 
-                    {...commonProps} 
+                <MobileDrawer
+                    isOpen={isMobileOpen}
+                    onClose={closeMobileMenu}
+                    {...commonProps}
                 />
             </div>
 
@@ -67,10 +103,10 @@ export const Sidebar = () => {
                 DESKTOP SIDEBAR
                ======================= */}
             <div className="hidden lg:block h-full">
-                <DesktopSidebar 
-                    isExpanded={isDesktopExpanded} 
-                    toggleExpanded={toggleDesktopSidebar} 
-                    {...commonProps} 
+                <DesktopSidebar
+                    isExpanded={isDesktopExpanded}
+                    toggleExpanded={toggleDesktopSidebar}
+                    {...commonProps}
                 />
             </div>
         </>
@@ -98,9 +134,9 @@ const MobileDrawer = ({ isOpen, onClose, items, handleLogout }: { isOpen: boolea
                 <span className="font-bold text-xl text-brand-primary truncate">
                     AutomaCo
                 </span>
-                
-                <button 
-                    onClick={onClose} 
+
+                <button
+                    onClick={onClose}
                     className="p-2 text-text-muted hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
                     aria-label="Cerrar menú"
                 >
@@ -120,9 +156,9 @@ const MobileDrawer = ({ isOpen, onClose, items, handleLogout }: { isOpen: boolea
                 {items.filter((i: MenuItem) => i.bottom).map((item: MenuItem) => (
                     <MobileItem key={item.path} item={item} onClick={onClose} />
                 ))}
-                
-                <button 
-                    onClick={handleLogout} 
+
+                <button
+                    onClick={handleLogout}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/10 font-medium transition-colors"
                 >
                     <LogOut size={22} className="shrink-0" />
@@ -144,7 +180,7 @@ const MobileItem = ({ item, onClick }: { item: MenuItem, onClick: () => void }) 
         `}
     >
         {item.icon}
-        <span>{item.label}</span> 
+        <span>{item.label}</span>
     </NavLink>
 );
 
@@ -188,7 +224,7 @@ const DesktopSidebar = ({ isExpanded, toggleExpanded, items, handleLogout }: { i
                 {items.filter((i: MenuItem) => i.bottom).map((item: MenuItem) => (
                     <DesktopItem key={item.path} item={item} isExpanded={isExpanded} />
                 ))}
-                
+
                 <button onClick={handleLogout} className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group text-text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/10 ${!isExpanded && 'justify-center'}`}>
                     <LogOut size={22} className="shrink-0" />
                     <span className={`whitespace-nowrap font-medium transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>Cerrar sesión</span>
@@ -216,7 +252,7 @@ const DesktopItem = ({ item, isExpanded }: { item: MenuItem, isExpanded: boolean
     >
         <div className="shrink-0 transition-transform duration-200 group-hover:scale-110">{item.icon}</div>
         <span className={`whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>{item.label}</span>
-        
+
         {!isExpanded && (
             <div className="absolute left-full ml-5 z-50 px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none -translate-x-2.5 group-hover:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap shadow-xl">
                 {item.label}

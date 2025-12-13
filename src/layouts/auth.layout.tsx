@@ -168,10 +168,44 @@ const RecoverPasswordBackground = () => (
     </div>
 );
 
+
+
 // 3. Componente Principal Layout
 export const AuthLayout = () => {
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
+
+    const renderButtonToggleThemeLogin = () => {
+        const baseClasses = "absolute z-50 p-3 rounded-full backdrop-blur-md border shadow-lg transition-all cursor-pointer flex items-center justify-center active:scale-95";
+
+        // Clases Responsivas
+        // Mobile (Por defecto): Fondo adaptativo (bg-surface), texto gris (text-muted), borde suave.
+        // Desktop (lg:): Fondo transparente blanco (bg-white/20), texto blanco, borde blanco.
+        const responsiveColorClasses = `
+            bg-bg-surface/80 border-border-base text-text-muted hover:text-brand-primary 
+            dark:bg-slate-800/80 dark:border-slate-700 dark:text-gray-300 dark:hover:text-white
+            
+            lg:bg-white/20 lg:border-white/30 lg:text-white lg:hover:bg-white/30 
+            lg:dark:bg-black/20 lg:dark:border-white/10 lg:dark:text-white
+        `;
+
+        // Posición según la ruta
+        let positionClasses = "top-5 right-5";
+
+        if (location.pathname === '/auth/register') {
+            positionClasses = "top-5 right-5";
+        }
+
+        return (
+            <button
+                onClick={toggleTheme}
+                className={`${baseClasses} ${positionClasses} ${responsiveColorClasses}`}
+                aria-label="Cambiar tema"
+            >
+                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+        );
+    };
 
     // Función Switch para elegir fondo según la ruta
     const renderBackground = () => {
@@ -193,12 +227,7 @@ export const AuthLayout = () => {
     const renderButtonToggleTheme = () => {
         switch (location.pathname) {
             case '/auth/login':
-                return <button
-                    onClick={toggleTheme}
-                    className="absolute top-5 right-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
-                >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                </button>;
+                return renderButtonToggleThemeLogin()
             case '/auth/register':
                 return <button
                     onClick={toggleTheme}

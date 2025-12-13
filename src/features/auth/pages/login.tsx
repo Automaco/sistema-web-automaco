@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react'; // Importamos el icono para el input general
 // Importamos ambos inputs
-import { Input, PasswordInput, Button } from '../../../components/index';
+import { Input, PasswordInput, Button, StatusModal } from '../../../components/index';
 import { useLogin } from '../hooks/use-login';
 
 export const LoginPage = () => {
@@ -10,12 +10,26 @@ export const LoginPage = () => {
         errors,
         isLoading,
         handleInputChange,
-        handleSubmit
+        handleSubmit,
+        clearErrors
     } = useLogin();
 
     return (
         // Contenedor principal
         <div className="flex h-screen w-full overflow-hidden">
+
+            {/* ODAL 
+                Se muestra automáticamente si existe errors.general.
+                Al cerrar, limpiamos el error en el hook.
+            */}
+            <StatusModal
+                isOpen={!!errors.general} // Convierte el string a boolean
+                onClose={clearErrors}
+                type="error"
+                title="Error de inicio de sesión"
+                description={errors.general}
+                buttonText="Intentar de nuevo"
+            />
 
             {/* SECCIÓN IZQUIERDA: Formulario */}
             {/* bg-bg-surface: Se vuelve blanco en Light, Slate-800 en Dark */}
