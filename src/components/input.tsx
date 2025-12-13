@@ -128,3 +128,62 @@ export const PasswordInput = ({ label, error, className, ...props }: PasswordInp
         </div>
     );
 };
+
+// ==========================================
+// 3. Input para codigo de activacion
+// ==========================================
+type CodeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+    label?: string;
+    error?: string;
+};
+export const CodeInput = ({ label, error, className, ...props }: CodeInputProps) => {
+    return (
+        <div className="flex flex-col gap-2 w-2/2">
+            <label className="text-sm font-semibold  text-brand-primary ml-1 text-left transition-colors">
+                {label}
+            </label>
+
+            <div className="relative group">
+                <input
+                    className={`
+                        w-full 
+                        font-semibold
+                        text-center 
+                        bg-bg-surface 
+                        
+                        /* 1. COLOR DEL TEXTO: Forzado a brand-primary */
+                        text-brand-primary
+                        
+                        /* 2. BORDES: Usamos rounded-full para que sean muy redondos */
+                        rounded-full
+
+                        /* Lógica de Borde */
+                        border-3
+                        ${error
+                            ? 'border-red-500 focus:ring-red-500/30 focus:border-red-500'
+                            : 'border-border-base focus:ring-brand-primary/50 focus:border-brand-primary hover:border-brand-primary/50'
+                        }
+
+                        /* Ajuste de padding: Al ser redondos, necesitamos más espacio a los lados */
+                        py-3 
+                        px-6
+                        
+                        placeholder:text-text-muted/50
+                        focus:outline-none 
+                        focus:ring-2 
+                        transition-all duration-200
+                        ${className}
+                    `}
+                    {...props}
+                />
+            </div>
+
+            {/* Mensaje de Error */}
+            {error && (
+                <span className="text-xs text-red-500 ml-3 text-left animate-pulse">
+                    {error}
+                </span>
+            )}
+        </div>
+    );
+};
