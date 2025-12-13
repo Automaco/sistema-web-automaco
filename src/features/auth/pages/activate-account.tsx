@@ -8,8 +8,8 @@ export const ActiveAccountPage = () => {
         formData,
         errors,
         isLoading,
-        handleInputChange,
-        handleSubmit
+        handleSubmit,
+        handleCodeChange
     } = useActiveAccount();
 
     return (
@@ -23,11 +23,11 @@ export const ActiveAccountPage = () => {
                         AutomaCo
                     </h1>
                     {/* text-text-muted: Gris adaptable */}
-                    <p className="text-brand-primary mt-6">
+                    <p className="text-brand-primary mt-6 text-2xl">
                         Tu acceso esta protegido
                     </p>
                     {/* text-text-muted: Gris adaptable */}
-                    <p className="text-brand-primary">
+                    <p className="text-brand-primary mt-2">
                         Activa tu cuenta
                     </p>
                 </div>
@@ -37,7 +37,8 @@ export const ActiveAccountPage = () => {
                         name="licenseKey"
                         placeholder="XXXX-XXXX-XXXX-XXXX"
                         value={formData.licenseKey}
-                        onChange={handleInputChange}
+                        onChange={handleCodeChange}
+                        maxLength={19}
                         error={errors.licenseKey}
                     />
                     <Button type="submit" className="mt-4" disabled={isLoading} >

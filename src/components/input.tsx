@@ -139,7 +139,7 @@ type CodeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
 export const CodeInput = ({ label, error, className, ...props }: CodeInputProps) => {
     return (
         <div className="flex flex-col gap-2 w-2/2">
-            <label className="text-sm font-semibold  text-brand-primary ml-1 text-left transition-colors">
+            <label className="font-semibold  text-brand-primary ml-1 text-left transition-colors">
                 {label}
             </label>
 

@@ -17,7 +17,7 @@ export const useActiveAccount = () => {
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        
+
         // Opcional: Limpiar el error cuando el usuario empieza a escribir de nuevo
         if (errors[name as keyof FormErrors]) {
             setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -58,10 +58,31 @@ export const useActiveAccount = () => {
             setIsLoading(false);
         }
     };
+    const handleCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+        // 1. Obtenemos el valor y quitamos guiones existentes y espacios
+        // También forzamos mayúsculas para que se vea profesional (opcional)
+        const rawValue = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+
+        // 2. Limitamos la longitud (ej: 16 caracteres reales = 4 bloques de 4)
+        if (rawValue.length > 16) return;
+
+        // 3. Agregamos el guion cada 4 caracteres
+        // La Regex (.{1,4}) parte el texto en grupos de 4
+        const formattedValue = rawValue.match(/.{1,4}/g)?.join("-") || "";
+
+        // 4. Actualizamos el estado
+        setFormData(prev => ({ ...prev, licenseKey: formattedValue }));
+
+        // Limpiar error si existe
+        if (errors.licenseKey) {
+            setErrors(prev => ({ ...prev, licenseKey: undefined }));
+        }
+    };
 
     return {
         formData,
         errors,
+        handleCodeChange,
         isLoading,
         handleInputChange,
         handleSubmit

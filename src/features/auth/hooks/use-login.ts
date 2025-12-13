@@ -60,7 +60,7 @@ export const useLogin = () => {
         try {
             // LLAMADA LIMPIA
             await authService.login(formData);
-            navigate('/dashboard');
+            navigate('/active-account');
 
         } catch (error) {
             console.error('Login failed', error);

@@ -168,7 +168,113 @@ const RecoverPasswordBackground = () => (
     </div>
 );
 
+// Diseño de verify code
+const VerifyCodeBackground = () => (
+    <div className="absolute inset-0 w-full h-full bg-brand-primary overflow-hidden z-0">
+        <svg
+            className="absolute w-full h-full pointer-events-none"
+            xmlns="http://www.w3.org/2000/svg"
+            width="100%"
+            height="100%"
+        >
+            {/* === DEFINICIONES === */}
+            <defs>
+                <pattern id="dot-pattern" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1.5" className="fill-white/30" />
+                </pattern>
+            </defs>
 
+            {/* === FORMAS DE ESQUINA === */}
+            <circle cx="0%" cy="0%" r="100" className="fill-white/5" />
+            <circle cx="50%" cy="0%" r="120" className="fill-white/5" />
+            <circle cx="50%" cy="110%" r="200" className="fill-white/5" />
+            <circle cx="5%" cy="100%" r="120" className="fill-white/10" />
+
+            {/* === ELEMENTOS FLOTANTES DERECHA === */}
+            <circle cx="100%" cy="40%" r="60" className="fill-white/5" />
+            <circle cx="75%" cy="35%" r="10" className="fill-white/20" />
+            <circle cx="78%" cy="38%" r="6" className="fill-white/15" />
+            <circle cx="90%" cy="60%" r="25" className="stroke-white/10 fill-none stroke-[4px]" />
+            <rect x="80%" y="45%" width="70" height="3" rx="1.5" className="fill-white/10" transform="rotate(45)" />
+            <rect x="92%" y="70%" width="30" height="3" rx="1.5" className="fill-white/15" />
+            <rect x="94%" y="72%" width="20" height="3" rx="1.5" className="fill-white/15" />
+            <rect x="90%" y="74%" width="25" height="3" rx="1.5" className="fill-white/15" />
+            <svg x="95%" y="25%" overflow="visible">
+                <path d="M 0 0 L -20 15 L -20 -15 Z" className="fill-white/10" />
+            </svg>
+            <svg x="82%" y="55%" overflow="visible">
+                <path d="M 0 0 L 12 20 L -12 20 Z" className="fill-white/15" transform="rotate(30)" />
+            </svg>
+
+            {/* === ELEMENTOS RESTANTES === */}
+            <circle cx="85%" cy="15%" r="8" className="fill-white/20" />
+            <circle cx="85%" cy="15%" r="8" className="fill-white/20" />
+            <rect x="88%" y="22%" width="40" height="4" rx="2" className="fill-white/10" />
+            <rect x="92%" y="24%" width="20" height="4" rx="2" className="fill-white/10" />
+            <svg x="45%" y="20%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+            <svg x="25%" y="70%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+            <svg x="45%" y="55%" overflow="visible">
+                <path d="M 0 0 L 15 25 L -15 25 Z" className="fill-white/10" transform="rotate(15)" />
+            </svg>
+            <circle cx="30%" cy="40%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+            <circle cx="20%" cy="10%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+            <circle cx="60%" cy="70%" r="18" className="stroke-white/15 fill-none stroke-[3px]" />
+            <svg x="80%" y="75%" overflow="visible">
+                <path d="M 0 0 L 20 0 L 10 20 Z" className="fill-white/10" transform="rotate(-15)" />
+            </svg>
+            <circle cx="100%" cy="100%" r="150" className="fill-white/10" />
+            <circle cx="100%" cy="0%" r="90" className="fill-white/10" />
+            <rect x="15%" y="65%" width="50" height="3" rx="1.5" className="fill-white/10" />
+            <rect x="15%" y="67%" width="30" height="3" rx="1.5" className="fill-white/10" />
+            <rect x="5%" y="82%" width="80" height="80" fill="url(#dot-pattern)" className="opacity-60" />
+        </svg>
+
+        {/* === CONTENEDOR DE LA IMAGEN RESPONSIVA ===
+           1. Mobile (default): Flex al fondo (items-end), centrado horizontalmente, opacidad baja.
+           2. Desktop (md:): Flex a la derecha, alineado a la derecha, opacidad full.
+        */}
+        <div className="
+            absolute h-full w-full pointer-events-none 
+            flex flex-col 
+            
+            /* -- MÓVIL -- */
+            justify-end items-center pb-10 opacity-30
+            
+            /* -- DESKTOP (md) -- */
+            md:opacity-100 
+            md:justify-center 
+            md:items-end 
+            md:pb-0 
+            md:pr-12 
+            md:top-0 
+            md:right-0 
+            md:w-1/2
+        ">
+            <div className="
+                relative
+                /* -- MÓVIL: Tamaño controlado -- */
+                w-64 h-64
+                
+                /* -- DESKTOP: Tu configuración original -- */
+                md:w-auto md:h-auto
+                md:absolute 
+                md:scale-140 
+                md:-translate-y-10 
+                md:-translate-x-[10%]
+            ">
+                <img
+                    src="../src/assets/sendCode.svg"
+                    alt="Fondo decorativo"
+                    className="w-full h-full object-cover grayscale-[20%]"
+                />
+            </div>
+        </div>
+    </div>
+);
 
 // 3. Componente Principal Layout
 export const AuthLayout = () => {
@@ -219,6 +325,8 @@ export const AuthLayout = () => {
                 return <RecoverPasswordBackground />;
             case '/auth/reset-password':
                 return <RecoverPasswordBackground />;
+            case '/auth/active-account':
+                return <VerifyCodeBackground />;
             default:
                 return <LoginBackground />;
         }
@@ -243,6 +351,13 @@ export const AuthLayout = () => {
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 </button>
             case '/auth/reset-password':
+                return <button
+                    onClick={toggleTheme}
+                    className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+            case '/auth/active-account':
                 return <button
                     onClick={toggleTheme}
                     className="absolute top-5 left-5 z-50 p-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 transition-all cursor-pointer shadow-lg"
