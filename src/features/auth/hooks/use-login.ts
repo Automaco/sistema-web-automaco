@@ -58,9 +58,8 @@ export const useLogin = () => {
         setErrors({});
 
         try {
-            // LLAMADA LIMPIA
             await authService.login(formData);
-            navigate('/auth/active-account');
+            navigate('/accounts/select-account');
 
         } catch (error) {
             console.error('Login failed', error);
@@ -73,7 +72,7 @@ export const useLogin = () => {
                     const parsed = JSON.parse(error.message);
 
                     if (parsed.error === 'account_not_activated') {
-                        errorMessage = 'Tu cuenta no está activada.';
+                        navigate('/auth/active-account');
                     } else if (parsed.message) {
                         errorMessage = parsed.message;
                     }
@@ -99,7 +98,7 @@ export const useLogin = () => {
     return {
         formData,
         errors,
-        isLoading, 
+        isLoading,
         handleInputChange,
         handleSubmit,
         clearErrors

@@ -14,7 +14,6 @@ export const AccountCard = ({ label, subLabel, icon, onClick, variant = 'default
 
     const styles = {
         default: `
-            /* Fondo usando la variable CSS corregida */
             bg-[var(--card-bg)] 
             border border-border-base shadow-lg
             /* Hover effects */
@@ -40,9 +39,9 @@ export const AccountCard = ({ label, subLabel, icon, onClick, variant = 'default
             {/* Icon Container */}
             <div className={`
                 w-16 h-16 mb-4 flex items-center justify-center rounded-full text-3xl transition-transform group-hover:scale-110 shadow-sm
-                ${variant === 'dashed' 
+                ${variant === 'dashed'
                     ? 'bg-transparent text-white' // Icono blanco en dashed
-                    : 'bg-gray-100 dark:bg-slate-700/50' // Icono con fondo gris en tarjetas normales
+                    : 'bg-brand-primary/60' // Icono con fondo verde
                 }
             `}>
                 {icon}

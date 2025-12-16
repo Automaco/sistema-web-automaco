@@ -5,7 +5,7 @@ import { AccountCard } from '../../../components/account-card';
 // Mock Icons
 const GoogleIcon = () => (
     <div className="flex items-center justify-center w-full h-full --color-text-adaptive rounded-full">
-         <span className="font-bold text-2xl bg-clip-text text-transparent bg-linear-to-r from-blue-500 to-red-500">G</span>
+        <span className="font-bold text-2xl bg-clip-text text-transparent bg-linear-to-r from-blue-500 to-red-500">G</span>
     </div>
 );
 
@@ -43,7 +43,7 @@ export const AccountListPage = () => {
                         label={account.name}
                         subLabel={account.email}
                         icon={account.type === 'google' ? <GoogleIcon /> : <OutlookIcon />}
-                        onClick={() => console.log(`Login con ${account.name}`)}
+                        onClick={() => navigate('/dashboard')}
                     />
                 ))}
 
