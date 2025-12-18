@@ -12,9 +12,9 @@
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
   --color-border-base: var(--border-base);
-  
-  --color-card-bg: var(--card-bg); 
+  --color-card-bg: var(--card-bg);
   --color-text-adaptive: var(--color-text);
+  --color-bar-adaptive: var(--color-bar-hover);
 }
 
 /* MODO CLARO */
@@ -24,9 +24,10 @@
   --text-main: #1e293b;
   --text-muted: #94a3b8;
   --border-base: #e2e8f0;
-  
-  --card-bg: #ffffff; 
-  --color-text: #ffffff; 
+  --card-bg: #ffffff;
+  --color-text: #ffffff;
+  --color-bar: #C0E6DF;
+  --color-bar-hover: #3CB396;
 }
 
 /* MODO OSCURO */
@@ -36,25 +37,44 @@
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
   --border-base: #334155;
-  
-  --card-bg: rgba(30, 41, 59, 0.95); 
+  --card-bg: rgba(30, 41, 59, 0.95);
   --color-text: #1e293b;
+  --color-bar: #3CB396;
+  --color-bar-hover: #C0E6DF;
 }
 
 /* --- ANIMACIONES PERSONALIZADAS --- */
 
 /* Flotar suavemente (arriba/abajo) */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* Flotar lateralmente y vertical (movimiento orgánico) */
 @keyframes drift {
-  0% { transform: translate(0, 0); }
-  33% { transform: translate(10px, -10px); }
-  66% { transform: translate(-5px, 5px); }
-  100% { transform: translate(0, 0); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(10px, -10px);
+  }
+
+  66% {
+    transform: translate(-5px, 5px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
 }
 
 /* Clases de utilidad para usar en el HTML */
@@ -75,8 +95,22 @@
 }
 
 /* Retrasos para que no se muevan todos al mismo tiempo */
-.delay-1000 { animation-delay: 1s; }
-.delay-2000 { animation-delay: 2s; }
-.delay-3000 { animation-delay: 3s; }
-.delay-4000 { animation-delay: 4s; }
-.delay-5000 { animation-delay: 5s; }
+.delay-1000 {
+  animation-delay: 1s;
+}
+
+.delay-2000 {
+  animation-delay: 2s;
+}
+
+.delay-3000 {
+  animation-delay: 3s;
+}
+
+.delay-4000 {
+  animation-delay: 4s;
+}
+
+.delay-5000 {
+  animation-delay: 5s;
+}
