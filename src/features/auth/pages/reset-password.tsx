@@ -81,12 +81,8 @@ export const ResetPasswordPage = () => {
                             {isLoading ? 'Restableciendo...' : 'Restablecer contraseña'}
                         </Button>
                     </form>
-
                 </div>
             </div>
-
-
-
         </div>
     );
 };

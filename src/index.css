@@ -15,6 +15,7 @@
   --color-card-bg: var(--card-bg);
   --color-text-adaptive: var(--color-text);
   --color-bar-adaptive: var(--color-bar-hover);
+  --color-title: var(--text-title);
 }
 
 /* MODO CLARO */
@@ -28,6 +29,7 @@
   --color-text: #ffffff;
   --color-bar: #C0E6DF;
   --color-bar-hover: #3CB396;
+  --text-title: #3CB396;
 }
 
 /* MODO OSCURO */
@@ -41,6 +43,7 @@
   --color-text: #1e293b;
   --color-bar: #3CB396;
   --color-bar-hover: #C0E6DF;
+  --text-title: #f1f5f9;
 }
 
 /* --- ANIMACIONES PERSONALIZADAS --- */
