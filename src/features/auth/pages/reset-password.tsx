@@ -21,8 +21,8 @@ export const ResetPasswordPage = () => {
     // Proteccion de ruta, para que no pueda acceder sin hacer la verifiacion
     // ----------------------------
     // 1. OBTENEMOS EL ESTADO (La llave de seguridad)
-    // const { verified, email } = location.state || {};
-    /*
+     const { verified, email } = location.state || {};
+ 
         // 2. PROTECCIÓN DE RUTA
         useEffect(() => {
             // Si no viene la bandera 'verified', lo sacamos de aquí
@@ -32,7 +32,7 @@ export const ResetPasswordPage = () => {
         }, [verified, navigate]);
     
         // Si no está verificado, no renderizamos nada mientras redirige (evita parpadeos)
-        if (!verified) return null;*/
+        if (!verified) return null;
     // ----------------------------
 
     /* Componentes principales */
