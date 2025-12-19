@@ -48,7 +48,7 @@ export const RegisterPage = () => {
                 <div className="w-full max-w-sm flex flex-col items-center">
 
                     <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-brand-primary mb-2">
+                        <h1 className="text-4xl font-bold text-title mb-2">
                             Crear cuenta
                         </h1>
                     </div>

@@ -18,7 +18,7 @@ export const LoginPage = () => {
         // Contenedor principal
         <div className="flex h-screen w-full overflow-hidden">
 
-            {/* ODAL 
+            {/* MODAL 
                 Se muestra automáticamente si existe errors.general.
                 Al cerrar, limpiamos el error en el hook.
             */}
@@ -37,7 +37,7 @@ export const LoginPage = () => {
                 <div className="w-full max-w-sm flex flex-col items-center">
 
                     <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-brand-primary mb-2">
+                        <h1 className="text-4xl font-bold text-title mb-2">
                             ¡Bienvenido de vuelta! <br /> Inicia sesión
                         </h1>
                         {/* text-text-muted: Gris adaptable */}
