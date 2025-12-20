@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard } from '../layouts/index';
 import { LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage, ResetPasswordPage, ActiveAccountPage } from '../features/auth/pages/index';
-import { DownloadDTEsPage, DashboardPage } from '../features/private/pages/index';
+import { DownloadDTEsPage, DashboardPage, SettingPage} from '../features/private/pages/index';
 import { NotFoundPage } from '../features/404';
 
 export const router = createBrowserRouter([
@@ -83,6 +83,17 @@ export const router = createBrowserRouter([
                     }
                 ]
             },
+            // Settings
+            {
+                path: '/settings',
+                element: <PrivateLayout/>,
+                children:[
+                    {
+                        path: '',
+                        element: <SettingPage/>,
+                    }
+                ]
+            }
         ]
     },
 
