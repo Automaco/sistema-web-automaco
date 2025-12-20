@@ -16,6 +16,7 @@
   --color-text-adaptive: var(--color-text);
   --color-bar-adaptive: var(--color-bar-hover);
   --color-title: var(--text-title);
+  --color-btn: var(--color-btn);
 }
 
 /* MODO CLARO */
@@ -30,6 +31,7 @@
   --color-bar: #C0E6DF;
   --color-bar-hover: #3CB396;
   --text-title: #3CB396;
+  --color-btn: #FF7878;
 }
 
 /* MODO OSCURO */
@@ -43,7 +45,8 @@
   --color-text: #1e293b;
   --color-bar: #3CB396;
   --color-bar-hover: #C0E6DF;
-  --text-title: #f1f5f9;
+  --text-title: #f1f5f9; 
+  --color-btn: #FF7878;
 }
 
 /* --- ANIMACIONES PERSONALIZADAS --- */

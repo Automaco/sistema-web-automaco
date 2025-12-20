@@ -39,4 +39,4 @@ export const MENU_ITEMS: MenuItem[] = [
         icon: <Settings size={22} />,
         bottom: true,
     },
-];
+]; 
