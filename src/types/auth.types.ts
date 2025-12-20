@@ -23,3 +23,4 @@ export interface ApiError {
     message: string;
     error?: string; // Para el caso 'account_not_activated'
 }
+

@@ -25,11 +25,15 @@ export const httpClient = async <T>(
     // Se extraen los valores, con GET como método por defecto.
     const { method = "GET", body, headers } = options;
 
+    const token = localStorage.getItem("token");
+
     // Se construye la configuración que se enviará a fetch().
     const config: RequestInit = {
         method,
         headers: {
             "Content-Type": "application/json", // El cuerpo se enviará como JSON.
+            "Accept": "application/json",     
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...headers, // Mezclar headers personalizados (si existen).
         },
     };
@@ -43,8 +47,15 @@ export const httpClient = async <T>(
 
     // Manejo de errores: si la respuesta no está en 2xx.
     if (!res.ok) {
-        const errorMessage = await res.text();
-        throw new Error(errorMessage || "Error en la petición");
+        // Si la API responde 401 → cerrar sesión
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/auth/login";
+        }
+
+        //const errorMessage = await res.text();
+        throw new Error("Error en el servidor, ponerse en contacto con el administrador.");
     }
 
     // Si todo está bien, se convierte la respuesta a JSON
