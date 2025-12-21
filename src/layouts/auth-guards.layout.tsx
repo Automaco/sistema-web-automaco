@@ -1,4 +1,20 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { type User } from '../types/auth.types';
+
+export const AdminGuard = () => {
+    // 1. Obtener usuario del almacenamiento (igual que el token)
+    const userStr = localStorage.getItem('user');
+    const user: User | null = userStr ? JSON.parse(userStr) : null;
+
+    // 2. Validar Token y Rol
+    // Si no hay usuario o el rol no es admin, lo mandamos al dashboard (o a 403)
+    if (!user || user.role !== 'admin') {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    // 3. Si es admin, dejamos pasar
+    return <Outlet />;
+};
 
 // Función auxiliar para chequear si existe el token
 const isAuthenticated = () => {

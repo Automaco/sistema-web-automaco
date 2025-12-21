@@ -23,32 +23,22 @@ export const useLogin = () => {
         }
     };
 
-    // Función auxiliar para validar email
     const validateEmail = (email: string) => {
-        // Regex estándar para email
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     };
 
     const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        // 1. Validaciones previas
+        // --- VALIDACIONES (Igual que antes) ---
         const newErrors: FormErrors = {};
+        if (!formData.email) newErrors.email = "El correo electrónico es obligatorio";
+        else if (!validateEmail(formData.email)) newErrors.email = "El formato del correo no es válido";
 
-        if (!formData.email) {
-            newErrors.email = "El correo electrónico es obligatorio";
-        } else if (!validateEmail(formData.email)) {
-            newErrors.email = "El formato del correo no es válido";
-        }
-        // Campo de contraseña obligatorio
-        if (!formData.password) {
-            newErrors.password = "La contraseña es obligatoria";
-        } else if (formData.password.length < 8) {
-            newErrors.password = "La contraseña debe tener al menos 8 caracteres";
-        }
+        if (!formData.password) newErrors.password = "La contraseña es obligatoria";
+        else if (formData.password.length < 8) newErrors.password = "La contraseña debe tener al menos 8 caracteres";
 
-        // Si hay errores, los seteamos y detenemos el envío
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -58,8 +48,18 @@ export const useLogin = () => {
         setErrors({});
 
         try {
-            await authService.login(formData);
-            navigate('/accounts/select-account');
+            // 1. Hacemos la petición
+            const response = await authService.login(formData);
+
+            // VERIFICACIÓN DE ACTIVACIÓN (CAMBIO PRINCIPAL)
+            // Ahora la lógica de decisión está DENTRO del try, porque la API responde 200
+            if (response.require_activation) {
+                // Si la bandera del backend dice true, mandamos a activar
+                navigate('/auth/active-account');
+            } else {
+                // Si no requiere activación, entra al dashboard
+                navigate('/dashboard');
+            }
 
         } catch (error) {
             console.error('Login failed', error);
@@ -71,18 +71,15 @@ export const useLogin = () => {
                     // Intentamos leer el JSON del error si viene del httpClient
                     const parsed = JSON.parse(error.message);
 
-                    if (parsed.error === 'account_not_activated') {
-                        navigate('/auth/active-account');
-                    } else if (parsed.message) {
-                        errorMessage = parsed.message;
-                    }
+                    errorMessage = parsed.message;
+
                 } catch {
                     // Si no es JSON, usamos el mensaje directo
-                    errorMessage = error.message || "Error de conexión";
+                    errorMessage = "Error de conexión";
                 }
             }
 
-            // Mapeo de mensajes amigables
+            // Mapeo amigable para credenciales incorrectas (401)
             if (errorMessage.includes('Credenciales inválidas') || errorMessage.includes('Unauthorized')) {
                 errorMessage = 'Correo o contraseña incorrectos.';
             }

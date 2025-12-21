@@ -23,7 +23,6 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Descarga de DTEs',
         path: '/dtes',
         icon: <FileText size={22} />,
-        roles: ['admin', 'accountant'], 
     },
     {
         label: 'Usuarios',

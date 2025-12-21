@@ -4,11 +4,27 @@ import { LogOut, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { MENU_ITEMS, type UserRole, type MenuItem } from '../../constants/menu-items';
 import { ConfirmationModal } from '../../components/ui/confirmation-modal';
 import { authService } from '../../services/auth.services';
+import { type User } from '../../types/auth.types';
 
-// Mock del usuario
-const CURRENT_USER_ROLE: UserRole = 'admin';
 
 export const Sidebar = () => {
+
+    // OBTENER USUARIO REAL
+    const [userRole] = useState<UserRole>(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user: User = JSON.parse(userStr);
+                // "as UserRole" fuerza a TypeScript a confiar en que el string es un rol válido
+                return user.role as UserRole; 
+            } catch (error) {
+                console.error("Error leyendo usuario del storage", error);
+                return 'client' as UserRole; // Valor por defecto si falla el JSON
+            }
+        }
+        return 'client' as UserRole; 
+    });
+
     // Estado Desktop
     const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
     // Estado Mobile
@@ -27,7 +43,7 @@ export const Sidebar = () => {
     // Filtro de items
     const filteredItems = MENU_ITEMS.filter(item => {
         if (!item.roles) return true;
-        return item.roles.includes(CURRENT_USER_ROLE);
+        return item.roles.includes(userRole);
     });
 
     // 1. Manejador inicial: Solo abre el modal

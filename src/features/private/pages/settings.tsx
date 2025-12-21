@@ -5,17 +5,19 @@ import {
 } from 'lucide-react';
 
 import { useLogin } from '../../auth/hooks/use-login';
-
+import { useTheme } from '../../../context/theme-context';
 
 // Tipos para las secciones disponibles
 type SectionType = 'profile' | 'password' | 'email' | 'delete';
 
-
 export const SettingPage = () => {
     // Estado para controlar qué sección se muestra a la derecha
     const [activeSection, setActiveSection] = useState<SectionType>('profile');
-    // Estado simulado para el modo oscuro (toggle directo)
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    // USAMOS EL HOOK DEL CONTEXTO
+    const { theme, toggleTheme } = useTheme();
+    
+    // Derivamos el booleano para el switch visual
+    const isDarkMode = theme === 'dark';
 
     return (
         // Contenedor principal con scroll suave si es necesario
@@ -56,13 +58,14 @@ export const SettingPage = () => {
                                             <div>
                                                 <h3 className="font-semibold text-text-main">Modo oscuro</h3>
                                                 <p className="text-xs text-text-muted mt-1 max-w-[200px]">
-                                                    Visualizar el sistema en modo oscuro para descansar la vista.
+                                                    Visualizar el sistema en modo oscuro.
                                                 </p>
                                             </div>
                                         </div>
-                                        {/* Switch Toggle Simulado */}
+
+                                        {/* 4. BOTÓN CONECTADO AL CONTEXTO */}
                                         <button
-                                            onClick={() => setIsDarkMode(!isDarkMode)}
+                                            onClick={toggleTheme} // <--- Acción real del contexto
                                             className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-brand-primary' : 'bg-gray-300'}`}
                                         >
                                             <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isDarkMode ? 'translate-x-6' : 'translate-x-0'}`} />
