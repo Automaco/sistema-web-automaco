@@ -29,7 +29,7 @@ export const DashboardPage = () => {
 
     return (
         // Contenedor principal con scroll suave si es necesario
-        <div className="flex flex-col h-full w-full p-4 md:p-6 bg-card-bg overflow-y-auto rounded-3xl">
+        <div className="flex flex-col h-full w-full p-4 md:p-6 bg-card-bg overflow-y-auto rounded-3xl border border-border-base ">
             
             <div className="max-w-[1600px] mx-auto w-full flex flex-col gap-6">
                 

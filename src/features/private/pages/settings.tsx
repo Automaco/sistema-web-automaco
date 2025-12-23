@@ -3,9 +3,9 @@ import { useState } from 'react';
 import {
     User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight, Camera
 } from 'lucide-react';
-
-import { useLogin } from '../../auth/hooks/use-login';
-
+import { Input, PasswordInput, Button } from '../../../components/index';
+import { useSettings } from '../hooks/use-settings';
+import { ConfirmationModal } from '../../../components/ui/confirmation-modal';
 
 // Tipos para las secciones disponibles
 type SectionType = 'profile' | 'password' | 'email' | 'delete';
@@ -16,12 +16,31 @@ export const SettingPage = () => {
     const [activeSection, setActiveSection] = useState<SectionType>('profile');
     // Estado simulado para el modo oscuro (toggle directo)
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const {
+        // LOGOUT: cierre de sesion
+        isLogoutModalOpen,
+        isLoggingOut,
+        handleLogoutClick,
+        confirmLogout,
+        closeLogoutModal
+    } = useSettings();
 
     return (
         // Contenedor principal con scroll suave si es necesario
-        <div className="flex flex-col h-full w-full p-2 md:p-1 bg-card-bg overflow-y-auto rounded-3xl">
+        <div className="flex flex-col h-full w-full p-2 md:p-1 bg-card-bg overflow-y-auto rounded-3xl border border-border-base">
             <div className="max-w-[1600px] mx-auto w-full flex flex-col gap-6">
-
+                {/* --- Modal - cierre de sesion --- */}
+                <ConfirmationModal
+                    isOpen={isLogoutModalOpen}
+                    onClose={closeLogoutModal}
+                    onConfirm={confirmLogout}
+                    isLoading={isLoggingOut}
+                    type="danger"
+                    title="¿Cerrar sesión?"
+                    description="¿Estás seguro de que quieres salir del sistema? Tendrás que volver a ingresar tus credenciales."
+                    confirmText="Sí, salir"
+                    cancelText="Cancelar"
+                />
 
                 <div className="flex flex-col h-full w-full p-4 md:p-6 bg-canvas overflow-y-auto">
                     <div className="max-w-6xl mx-auto w-full">
@@ -42,7 +61,7 @@ export const SettingPage = () => {
                                     <SettingsItem
                                         icon={<User size={20} />}
                                         title="Perfil"
-                                        description="Nombre de la institución, correo y avatar."
+                                        description="Nombre de la institución, correo"
                                         isActive={activeSection === 'profile'}
                                         onClick={() => setActiveSection('profile')}
                                     />
@@ -82,7 +101,7 @@ export const SettingPage = () => {
                                     <SettingsItem
                                         icon={<Mail size={20} />}
                                         title="Configuración de correo"
-                                        description="Selección de cambio de correo electrónico para notificaciones."
+                                        description="Establecer datos para el operador de correo electronico"
                                         isActive={activeSection === 'email'}
                                         onClick={() => setActiveSection('email')}
                                     />
@@ -105,6 +124,7 @@ export const SettingPage = () => {
                                                 onClick={() => setActiveSection('delete')}
                                                 className="mt-3 w-full bg-red-500 text-white hover:bg-red-600 font-medium py-2 rounded-xl text-sm transition-colors"
                                             >
+
                                                 Eliminar cuenta permanentemente
                                             </button>
                                         </div>
@@ -112,12 +132,19 @@ export const SettingPage = () => {
                                 </div>
 
                                 {/* Footer: CERRAR SESIÓN */}
+
                                 <div className="mt-8 pt-6 border-t border-border-base">
-                                    <button className="flex items-center gap-3 text-text-muted hover:text-red-500 transition-colors font-medium w-full group">
+                                    <button
+                                        onClick={handleLogoutClick} // 👈 CONECTADO AQUÍ
+                                        className="flex items-center gap-3 text-text-muted hover:text-red-500 transition-colors font-medium w-full group"
+                                    >
                                         <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
                                         Cerrar sesión
                                     </button>
                                 </div>
+
+
+
                             </div>
 
                             {/* --- DERECHA: PANEL DE CONTENIDO DINÁMICO --- */}
@@ -168,7 +195,7 @@ const renderContent = (section: SectionType) => {
         case 'profile':
             return <ProfileView />;
         case 'password':
-            return <PlaceholderView title="Nueva Contraseña" icon={<Lock size={48} />} />;
+            return <ChangePasswordView />;
         case 'email':
             return <PlaceholderView title="Configuración de Correo" icon={<Mail size={48} />} />;
         case 'delete':
@@ -179,44 +206,105 @@ const renderContent = (section: SectionType) => {
 };
 
 // 3. VISTA: PERFIL (Igual a tu imagen)
-const ProfileView = () => (
+const ProfileView = () => {
+    const {
+        formData,
+        errors,
+        isLoading,
+        handleInputChange,
+        handleSubmit,
+        handleReset
+    } = useSettings();
 
-    <div className="flex flex-col items-center text-center w-full max-w-lg mx-auto">
-        <h2 className="text-2xl font-bold text-text-main mb-8">Tu perfil</h2>
+    return (
+        <div className="flex flex-col items-center text-center w-full max-w-lg mx-auto">
+            <h2 className="text-2xl font-bold text-text-main mb-8">Tu perfil</h2>
 
-        <div className="w-full space-y-6 border-t  border-border-base">
-            <div className="text-left mt-4">
-                <label className="text-sm font-semibold text-text-muted ml-1 mb-2 block">Nombre de la institución</label>
-                <input
-                    type="text"
-                    placeholder="Escribe el nombre aquí"
-                    defaultValue="nombre default"
-                    className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-text-main"
-                />
+            <div className="w-full space-y-6 border-t  border-border-base mb-4">
+                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 items-center mt-4">
+                    <Input
+                        label="Nombre de la institución"
+                        name="text"
+                        type="text"
+                        placeholder="Nombre"
+                        value={formData.text}
+                        onChange={handleInputChange}
+                        error={errors.text}
+                    />
+                    <Input
+                        label="Correo electrónico"
+                        name="email"
+                        type="email"
+                        placeholder="nombre@ejemplo.com"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        // Aquí pasamos el icono como componente, mucho más flexible
+                        icon={<Mail size={20} />}
+                        error={errors.email}
+                    />
+
+                    <Button type="submit" className="mt-1" disabled={isLoading} >
+                        {isLoading ? '...' : 'Actualizar informacion'}
+                    </Button>
+
+                    <Button type="button" variant="outline" className="mt-1" disabled={isLoading} onClick={handleReset}>
+                        {isLoading ? '...' : 'Cancelar'}
+                    </Button>
+
+                </form>
             </div>
+        </div>);
 
-            <div className="text-left">
-                <label className="text-sm font-semibold text-text-muted ml-1 mb-2 block">Correo electrónico</label>
-                <input
-                    type="email"
-                    placeholder="ejemplo@correo.com"
-                    defaultValue="admin@techsolutions.com"
-                    className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-text-main"
-                />
+};
+
+// 5. Cambio de contraseña
+const ChangePasswordView = () => {
+    const {
+        formData,
+        errors,
+        isLoading,
+        handleInputChange,
+        handleSubmit,
+        handleReset
+    } = useSettings();
+
+    return (
+        <div className="flex flex-col items-center text-center w-full max-w-lg mx-auto">
+            <h2 className="text-2xl font-bold text-text-main mb-8">Nueva contraseña</h2>
+
+            <div className="w-full space-y-6 border-t border-border-base">
+                <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 items-center mt-4">
+                    <PasswordInput
+                        label="Contraseña"
+                        name="password"
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        error={errors.password}
+                    />
+                    <PasswordInput
+                        label="Confirmar contraseña"
+                        name="confirmPassword"
+                        placeholder="••••••••"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        error={errors.confirmPassword}
+                    />
+
+                    <Button type="submit" className="mt-1" disabled={isLoading} >
+                        {isLoading ? '...' : 'Actualizar contraseña'}
+                    </Button>
+
+                    <Button type="submit" variant="outline" className="mt-1" disabled={isLoading} onClick={handleReset}>
+                        {isLoading ? '...' : 'Cancelar'}
+                    </Button>
+
+                </form>
             </div>
-
-            <div className="h-4"></div> {/* Spacer */}
-
-            <button className="w-full bg-brand-primary text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-brand-primary/25 hover:bg-brand-dark transition-all active:scale-[0.98]">
-                Actualizar información
-            </button>
-
-            <button className="w-full bg-transparent text-text-muted font-semibold py-3.5 rounded-2xl border border-border-base hover:bg-bg-canvas transition-colors">
-                Cancelar
-            </button>
         </div>
-    </div>
-);
+    )
+};
+
 
 // 4. VISTA: ELIMINAR CUENTA
 const DeleteAccountView = () => (
