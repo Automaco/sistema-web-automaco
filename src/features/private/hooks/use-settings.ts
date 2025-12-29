@@ -112,12 +112,11 @@ export const useSettings = () => {
     // 3. Confirmar Logout (Con spinner y timeout)
     const confirmLogout = () => {
         setIsLoggingOut(true);
-
         setTimeout(() => {
+            navigate('/auth/login');
             authService.logout(); // Tu servicio de logout real
             setIsLoggingOut(false);
             setIsLogoutModalOpen(false);
-            navigate('/auth/login'); // Redirección
         }, 1500);
     };
 

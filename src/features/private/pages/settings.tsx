@@ -1,7 +1,7 @@
 // Pagina de configuracion
 import { useState } from 'react';
 import {
-    User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight, Camera
+    User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight
 } from 'lucide-react';
 import { Input, PasswordInput, Button } from '../../../components/index';
 import { useSettings } from '../hooks/use-settings';

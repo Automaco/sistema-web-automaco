@@ -9,6 +9,7 @@ export interface User {
     role: UserRole;
     avatar?: string;
     connected_accounts?: ConnectedAccount[];
+    is_active: boolean;
 }
 
 export interface ConnectedAccount {

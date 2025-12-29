@@ -28,7 +28,6 @@ export const authService = {
             // Siempre limpiamos el storage, incluso si la API falla
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/auth/login';
         }
     },
 
