@@ -1,197 +1,271 @@
-import { useEffect, useState } from 'react';
-import { httpClient } from '../../../utils/http-client';
-import { type User, type UserRole } from '../../../types/auth.types'; // Importamos UserRole explícitamente
-import { Trash2, Shield, ShieldAlert, Plus, Loader2, Link2, Edit2 } from 'lucide-react'; // Agregamos Edit2
+import { useState, useMemo } from 'react';
+import { type User, type UserRole } from '../../../types/auth.types';
+import { Trash2, Shield, ShieldAlert, Plus, Loader2, Link2, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'; 
+// Imports de Componentes
 import { CreateUserModal } from '../components/create-user-modal';
-import { LinkedAccountsModal } from '../components/linked-accounts-modal'; 
-import { EditUserModal } from '../components/edit-user-modal'; // <--- NUEVO MODAL
-import { StatusModal, type ModalType } from '../../../components/ui/status-modal'; 
+import { LinkedAccountsModal } from '../components/linked-accounts-modal';
+import { EditUserModal } from '../components/edit-user-modal';
+import { StatusModal, type ModalType } from '../../../components/ui/status-modal';
+import { useUsers } from '../hooks/use-user';
 
 export const UsersPage = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    
-    // Estados de Modales
+    // Usamos el Hook
+    const { users, loading, addUser, editUser, removeUser, switchRole } = useUsers();
+
+    // Estados de UI (Modales)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // <--- NUEVO
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAccountsModalOpen, setIsAccountsModalOpen] = useState(false);
-    
-    // Usuario seleccionado para ver cuentas O para editar
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-    const [statusModal, setStatusModal] = useState<{
-        isOpen: boolean;
-        type: ModalType;
-        title: string;
-        description: string;
-    }>({ isOpen: false, type: 'info', title: '', description: '' });
+    const [statusModal, setStatusModal] = useState<{ isOpen: boolean; type: ModalType; title: string; description: string }>({ isOpen: false, type: 'info', title: '', description: '' });
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+    // --- PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(5); // Default 5 items
 
-    const fetchUsers = async () => {
-        try {
-            const data = await httpClient.get<User[]>('/users');
-            setUsers(data);
-        } catch (error) {
-            console.error("Error cargando usuarios", error);
-        } finally {
-            setLoading(false);
+    // Calcular usuarios visibles
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return users.slice(startIndex, startIndex + itemsPerPage);
+    }, [users, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(users.length / itemsPerPage);
+
+    // --- HANDLERS UI ---
+
+    // Crear Usuario
+    const handleCreateUser = async (userPayload: { name: string; email: string; role: UserRole; is_active: boolean; password?: string; }) => {
+        // Llamamos al hook que hace la petición real
+        const result = await addUser(userPayload);
+
+        if (!result.success) {
+            // Lanzamos error 
+            throw new Error(result.message);
         }
+
+        setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Usuario Creado',
+            description: result.message
+        });
     };
 
-    const handleUserCreated = (newUser: User) => {
-        setUsers([...users, newUser]);
-        setStatusModal({ isOpen: true, type: 'success', title: 'Usuario Creado', description: `El usuario ${newUser.name} ha sido registrado.` });
+    // Editar Usuario (Conectado al Modal de Edición)
+    const handleUpdateUser = async (id: number, data: { name: string; email: string; role: UserRole; is_active: boolean; password?: string; }) => {
+        const result = await editUser(id, data); // Llamamos al hook
+        if (!result.success) throw new Error(result.message); //ERROR
+
+        setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Actualizado',
+            description: result.message
+        });
     };
 
-    // --- NUEVO: Callback para cuando se edita un usuario ---
-    const handleUserUpdated = (updatedUser: User) => {
-        setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
-        setStatusModal({ isOpen: true, type: 'success', title: 'Usuario Actualizado', description: `Los datos de ${updatedUser.name} han sido guardados.` });
+    // Eliminar
+    const handleDeleteClick = async (id: number) => {
+        if (!confirm('¿Eliminar usuario?')) return;
+        const result = await removeUser(id);
+        setStatusModal({
+            isOpen: true,
+            type: result.success ? 'success' : 'error',
+            title: result.success ? 'Eliminado' : 'Error',
+            description: result.message
+        });
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('¿Estás seguro de eliminar este usuario?')) return; 
+    // Cambiar Rol
+    const handleToggleRole = async (user: User) => {
         try {
-            await httpClient.delete(`/users/${id}`);
-            setUsers(users.filter(u => u.id !== id));
-            setStatusModal({ isOpen: true, type: 'success', title: 'Eliminado', description: 'El usuario ha sido eliminado correctamente.' });
+            await switchRole(user);
         } catch {
-            setStatusModal({ isOpen: true, type: 'error', title: 'Error', description: 'No se pudo eliminar el usuario.' });
+            setStatusModal({ isOpen: true, type: 'error', title: 'Error', description: 'No se pudo cambiar el rol' });
         }
     };
 
-    // --- CORRECCIÓN DE TIPO EN TOGGLE ROLE ---
-    const toggleRole = async (user: User) => {
-        // Forzamos el tipo UserRole para que TypeScript no se confunda con strings genéricos
-        const newRole: UserRole = user.role === 'admin' ? 'client' : 'admin'; 
-        
-        try {
-            // Optimistic UI: Actualizamos localmente primero (opcional, aquí lo hacemos después del await para seguridad)
-            await httpClient.put(`/users/${user.id}`, { ...user, role: newRole });
-            
-            // Actualizamos el estado con el tipo correcto
-            setUsers(prevUsers => prevUsers.map(u => 
-                u.id === user.id ? { ...u, role: newRole } : u
-            ));
-        } catch {
-            setStatusModal({ isOpen: true, type: 'error', title: 'Error', description: 'No se pudo actualizar el rol.' });
-        }
-    };
+    // Modales auxiliares
+    const openAccounts = (u: User) => { setSelectedUser(u); setIsAccountsModalOpen(true); };
+    const openEdit = (u: User) => { setSelectedUser(u); setIsEditModalOpen(true); };
 
-    const openAccountsModal = (user: User) => {
-        setSelectedUser(user);
-        setIsAccountsModalOpen(true);
-    };
 
-    // --- NUEVO: Función para abrir modal de edición ---
-    const openEditModal = (user: User) => {
-        setSelectedUser(user);
-        setIsEditModalOpen(true);
-    };
-
-    if (loading) return <div className="flex justify-center items-center h-[calc(100vh-100px)] w-full"><Loader2 className="animate-spin text-brand-primary" size={40} /></div>;
+    if (loading) return <div className="flex justify-center items-center h-screen w-full"><Loader2 className="animate-spin text-brand-primary" size={40} /></div>;
 
     return (
-        <div className="flex flex-col h-full w-full p-4 md:p-8 overflow-y-auto">
-            <div className="max-w-[1400px] mx-auto w-full space-y-8">
-            
+        <div className="flex flex-col h-full w-full p-4 md:p-8 overflow-y-auto bg-card-bg rounded-3xl border border-border-base shadow-lg">
+            <div className="max-w-[1400px] mx-auto w-full space-y-6">
+
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-text-main">Administración de Usuarios</h1>
-                        <p className="text-text-muted mt-2 text-lg">Controla el acceso, roles y vinculaciones de tu equipo.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-text-main">Administración de usuarios</h1>
+                        <p className="text-text-muted text-sm md:text-base">Usuarios totales: {users.length}</p>
                     </div>
-                    <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 bg-brand-primary text-white px-6 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-primary/25 hover:bg-brand-dark hover:scale-[1.02] transition-all active:scale-95">
-                        <Plus size={22} strokeWidth={2.5} /> Nuevo Usuario
+                    <button onClick={() => setIsCreateModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-primary text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-dark active:scale-95 transition-all">
+                        <Plus size={20} /> Nuevo Usuario
                     </button>
                 </div>
 
-                {/* Tabla */}
-                <div className="bg-bg-surface rounded-[2rem] shadow-sm border border-border-base overflow-hidden animate-fade-in-up">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-card-bg/50 border-b border-border-base">
-                                <tr>
-                                    <th className="p-6 pl-8 font-semibold text-text-muted text-xs uppercase tracking-wider">Usuario</th>
-                                    <th className="p-6 font-semibold text-text-muted text-xs uppercase tracking-wider text-center">Rol</th>
-                                    <th className="p-6 font-semibold text-text-muted text-xs uppercase tracking-wider text-center">Vinculaciones</th>
-                                    <th className="p-6 pr-8 font-semibold text-text-muted text-xs uppercase tracking-wider text-right">Acciones</th>
+                {/* --- VISTA MÓVIL (CARDS) --- */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {paginatedUsers.map((u) => (
+                        <div key={u.id} className="bg-bg-surface p-5 rounded-2xl shadow-sm border border-border-base flex flex-col gap-4">
+                            {/* Top Card: Info + Menu */}
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary font-bold flex items-center justify-center uppercase shrink-0">
+                                        {u.name.substring(0, 2)}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-text-main">{u.name}</div>
+                                        <div className="text-xs text-text-muted">{u.email}</div>
+                                    </div>
+                                </div>
+                                {/* Badge Estado */}
+                                {u.is_active ?
+                                    <span className="text-[10px] px-2 py-1 bg-green-100 text-green-700 rounded-full font-bold">ACTIVO</span> :
+                                    <span className="text-[10px] px-2 py-1 bg-red-100 text-red-700 rounded-full font-bold">INACTIVO</span>
+                                }
+                            </div>
+
+                            <hr className="border-border-base/50" />
+
+                            {/* Middle Card: Detalles */}
+                            <div className="flex justify-between items-center text-sm">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-text-muted text-xs font-medium uppercase">Rol</span>
+                                    <button onClick={() => handleToggleRole(u)} className="flex items-center gap-1.5 font-bold text-text-main">
+                                        {u.role === 'admin' ? <ShieldAlert size={14} className="text-purple-600" /> : <Shield size={14} className="text-gray-500" />}
+                                        {u.role.toUpperCase()}
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-1 items-end">
+                                    <span className="text-text-muted text-xs font-medium uppercase">Cuentas</span>
+                                    <button onClick={() => openAccounts(u)} className="flex items-center gap-1 text-brand-primary font-medium">
+                                        <Link2 size={14} />
+                                        {u.connected_accounts?.length || 0} Vinculadas
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Bottom Card: Acciones (Siempre visibles en móvil) */}
+                            <div className="grid grid-cols-2 gap-3 mt-1">
+                                <button onClick={() => openEdit(u)} className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-bg-canvas text-text-main font-medium border border-border-base active:bg-gray-100">
+                                    <Edit2 size={16} /> Editar
+                                </button>
+                                <button onClick={() => handleDeleteClick(u.id)} className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 text-red-600 font-medium border border-red-100 active:bg-red-100">
+                                    <Trash2 size={16} /> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* --- VISTA DESKTOP (TABLA) --- */}
+                <div className="hidden md:block rounded-3xl shadow-sm border border- overflow-hidden border-b border-border-base bg-bg-canvas/30">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-card-bg/50 border-b border-border-base text-xs text-text-muted uppercase">
+                            <tr>
+                                <th className="p-5 pl-8">Usuario</th>
+                                <th className="p-5 text-center">Rol</th>
+                                <th className="p-5 text-center">Vinculaciones</th>
+                                <th className="p-5 pr-8 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-base text-sm">
+                            {paginatedUsers.map((u) => (
+                                <tr key={u.id} className="hover:bg-bg-canvas/40 transition-colors group">
+                                    <td className="p-5 pl-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary font-bold flex items-center justify-center uppercase border border-brand-primary/10">
+                                                {u.name.substring(0, 2)}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-text-main">{u.name}</div>
+                                                <div className="text-xs text-text-muted">{u.email}</div>
+                                                <div className="mt-1">
+                                                    {u.is_active ?
+                                                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">ACTIVO</span> :
+                                                        <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">INACTIVO</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-5 text-center">
+                                        <button onClick={() => handleToggleRole(u)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-transform active:scale-95 ${u.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-white text-gray-600 border-gray-200'}`}>
+                                            {u.role === 'admin' ? <ShieldAlert size={14} /> : <Shield size={14} />}
+                                            {u.role.toUpperCase()}
+                                        </button>
+                                    </td>
+                                    <td className="p-5 text-center">
+                                        <button onClick={() => openAccounts(u)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10 transition-colors border border-brand-primary/10">
+                                            <Link2 size={14} /> Ver Cuentas
+                                            {(u.connected_accounts?.length || 0) > 0 && <span className="ml-1 bg-brand-primary text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full">{u.connected_accounts?.length}</span>}
+                                        </button>
+                                    </td>
+                                    <td className="p-5 pr-8 text-right">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                            <button onClick={() => openEdit(u)} className="p-2 rounded-lg text-text-muted hover:text-brand-primary hover:bg-brand-primary/10 transition-colors" title="Editar">
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button onClick={() => handleDeleteClick(u.id)} className="p-2 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 transition-colors" title="Eliminar">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border-base">
-                                {users.length === 0 ? (
-                                    <tr><td colSpan={4} className="p-16 text-center text-text-muted">No hay usuarios registrados.</td></tr>
-                                ) : (
-                                    users.map((u) => (
-                                        <tr key={u.id} className="hover:bg-bg-canvas/60 transition-colors group">
-                                            {/* Usuario */}
-                                            <td className="p-5 pl-8">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-primary/20 to-brand-primary/5 text-brand-primary font-bold flex items-center justify-center text-sm shrink-0 uppercase border border-brand-primary/10 shadow-sm">
-                                                        {u.name.substring(0, 2)}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-text-main text-sm">{u.name}</div>
-                                                        <div className="text-xs text-text-muted font-medium">{u.email}</div>
-                                                        {/* --- INDICADOR DE ACTIVACIÓN (OPCIONAL) --- */}
-                                                        {/* Puedes mostrar si está activa o no basada en u.email_verified_at o u.is_active si viene del backend */}
-                                                    </div>
-                                                </div>
-                                            </td>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-                                            {/* Rol */}
-                                            <td className="p-5 text-center">
-                                                <button onClick={() => toggleRole(u)} className={`relative inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 border shadow-sm ${u.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple dark:border-purple-800' : 'bg-brand-primary text-white border-brand-primary/200 '}`}>
-                                                    {u.role === 'admin' ? <ShieldAlert size={14} /> : <Shield size={14} />}
-                                                    <span className="uppercase tracking-wide">{u.role}</span>
-                                                </button>
-                                            </td>
+                {/* --- CONTROLES DE PAGINACIÓN --- */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-2 text-sm text-text-muted border-t border-border-base pt-6">
+                    <div className="flex items-center gap-2">
+                        <span>Mostrar</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            className="bg-bg-surface border border-border-base rounded-lg px-2 py-1 focus:ring-2 focus:ring-brand-primary/20 outline-none"
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                        </select>
+                        <span>por página</span>
+                    </div>
 
-                                            {/* Vinculaciones */}
-                                            <td className="p-5 text-center">
-                                                <button onClick={() => openAccountsModal(u)} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10 transition-colors border border-brand-primary/10">
-                                                    <Link2 size={14} strokeWidth={2.5}/> Ver Cuentas
-                                                    {u.connected_accounts && u.connected_accounts.length > 0 && <span className="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[10px] ml-1">{u.connected_accounts.length}</span>}
-                                                </button>
-                                            </td>
-
-                                            {/* Acciones (Editar y Eliminar) */}
-                                            <td className="p-5 pr-8 text-right">
-                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {/* BOTÓN EDITAR */}
-                                                    <button onClick={() => openEditModal(u)} className="p-2.5 rounded-xl text-text-muted hover:text-brand-primary hover:bg-brand-primary/10 transition-all scale-90 group-hover:scale-100" title="Editar usuario">
-                                                        <Edit2 size={18} strokeWidth={2.5} />
-                                                    </button>
-                                                    {/* BOTÓN ELIMINAR */}
-                                                    <button onClick={() => handleDelete(u.id)} className="p-2.5 rounded-xl text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all scale-90 group-hover:scale-100" title="Eliminar usuario">
-                                                        <Trash2 size={18} strokeWidth={2.5} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="flex items-center gap-2 bg-bg-surface rounded-xl border border-border-base p-1">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg hover:bg-bg-canvas disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <span className="px-3 font-medium text-text-main">
+                            Página {currentPage} de {totalPages || 1}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="p-2 rounded-lg hover:bg-bg-canvas disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
                 </div>
+
             </div>
 
-            {/* --- MODALES --- */}
-            <CreateUserModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onUserCreated={handleUserCreated} />
+            {/* Modales */}
+            <CreateUserModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onUserCreated={handleCreateUser} />
+            <EditUserModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} user={selectedUser} onSubmit={handleUpdateUser} />
             <LinkedAccountsModal isOpen={isAccountsModalOpen} onClose={() => setIsAccountsModalOpen(false)} user={selectedUser} />
-            
-            {/* MODAL DE EDICIÓN */}
-            <EditUserModal 
-                isOpen={isEditModalOpen} 
-                onClose={() => setIsEditModalOpen(false)} 
-                user={selectedUser} 
-                onUserUpdated={handleUserUpdated} 
-            />
-
             <StatusModal isOpen={statusModal.isOpen} onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))} type={statusModal.type} title={statusModal.title} description={statusModal.description} />
         </div>
     );

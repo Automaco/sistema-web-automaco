@@ -16,13 +16,13 @@ export const Sidebar = () => {
             try {
                 const user: User = JSON.parse(userStr);
                 // "as UserRole" fuerza a TypeScript a confiar en que el string es un rol válido
-                return user.role as UserRole; 
+                return user.role as UserRole;
             } catch (error) {
                 console.error("Error leyendo usuario del storage", error);
                 return 'client' as UserRole; // Valor por defecto si falla el JSON
             }
         }
-        return 'client' as UserRole; 
+        return 'client' as UserRole;
     });
 
     // Estado Desktop
@@ -46,22 +46,21 @@ export const Sidebar = () => {
         return item.roles.includes(userRole);
     });
 
-    // 1. Manejador inicial: Solo abre el modal
+    //  Manejador inicial: Solo abre el modal
     const handleLogoutClick = () => {
         setIsLogoutModalOpen(true);
         // Si estamos en móvil, cerramos el menú para que se vea bien el modal
         if (isMobileOpen) closeMobileMenu();
     };
 
-    // 2. Acción Real: Ejecuta el logout y redirige
+    // Acción Real: Ejecuta el logout y redirige
     const confirmLogout = () => {
         setIsLoggingOut(true); // Activa el spinner en el modal
-
         setTimeout(() => {
-            setIsLoggingOut(false); // Desactiva el spinner
-            authService.logout(); 
-            setIsLogoutModalOpen(false);
             navigate('/auth/login');
+            setIsLoggingOut(false); // Desactiva el spinner
+            authService.logout();
+            setIsLogoutModalOpen(false);
         }, 1500);
     };
 
@@ -79,8 +78,8 @@ export const Sidebar = () => {
                 isOpen={isLogoutModalOpen}
                 onClose={() => !isLoggingOut && setIsLogoutModalOpen(false)} // Evita cerrar si está cargando
                 onConfirm={confirmLogout}
-                isLoading={isLoggingOut} 
-                type="danger" 
+                isLoading={isLoggingOut}
+                type="danger"
                 title="¿Cerrar sesión?"
                 description="¿Estás seguro de que quieres salir del sistema? Tendrás que volver a ingresar tus credenciales."
                 confirmText="Sí, salir"

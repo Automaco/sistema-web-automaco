@@ -1,49 +1,46 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Loader2, Lock } from 'lucide-react'; // Agregué el icono Lock
-import { httpClient } from '../../../utils/http-client';
+import { X, Save, Loader2, Lock, Activity } from 'lucide-react';
 import { type User, type UserRole } from '../../../types/auth.types';
+
+// Definimos la estructura de los datos que vamos a enviar
+export interface UpdateUserPayload {
+    name: string;
+    email: string;
+    role: UserRole;
+    is_active: boolean;
+    password?: string;
+}
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     user: User | null;
-    onUserUpdated: (user: User) => void;
+    onSubmit: (id: number, data: UpdateUserPayload) => Promise<void>;
 }
 
-// Definimos la interfaz para evitar el error "Unexpected any"
-interface UpdateUserPayload {
-    name: string;
-    email: string;
-    role: UserRole;
-    password?: string;
-}
-
-export const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }: Props) => {
+export const EditUserModal = ({ isOpen, onClose, user, onSubmit }: Props) => {
     const [isLoading, setIsLoading] = useState(false);
-    
-    // Estado del formulario principal
+    const [error, setError] = useState('');
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        role: 'client' as UserRole,
-        password: '' // Nueva contraseña
+        role: 'user' as UserRole,
+        is_active: true,
+        password: ''
     });
-
-    // Estado separado para confirmar contraseña
     const [confirmPassword, setConfirmPassword] = useState('');
-    
-    const [error, setError] = useState('');
 
-    // Cargar datos al abrir
     useEffect(() => {
         if (user) {
             setFormData({
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                password: '' // Siempre inicia vacía por seguridad
+                is_active: Boolean(user.is_active),
+                password: ''
             });
-            setConfirmPassword(''); // Reseteamos la confirmación
+            setConfirmPassword('');
             setError('');
         }
     }, [user, isOpen]);
@@ -55,178 +52,155 @@ export const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }: Props) =
         setIsLoading(true);
         setError('');
 
-        // 1. VALIDACIÓN DE CONTRASEÑA
-        if (formData.password.trim() !== '') {
-            if (formData.password.length < 8) {
-                setError('La nueva contraseña debe tener al menos 8 caracteres.');
-                setIsLoading(false);
-                return;
-            }
-            if (formData.password !== confirmPassword) {
-                setError('Las contraseñas no coinciden. Por favor verifica.');
-                setIsLoading(false);
-                return;
-            }
+        if (formData.password && formData.password !== confirmPassword) {
+            setError('Las contraseñas no coinciden');
+            setIsLoading(false);
+            return;
         }
 
         try {
-            // 2. PREPARAR PAYLOAD CON TIPADO CORRECTO
+            // 1. Preparamos el objeto (Payload)
             const payload: UpdateUserPayload = {
                 name: formData.name,
                 email: formData.email,
-                role: formData.role
+                role: formData.role,
+                is_active: formData.is_active,
             };
 
-            // Solo enviamos la contraseña si el usuario escribió algo
             if (formData.password.trim() !== '') {
                 payload.password = formData.password;
             }
 
-            // 3. PETICIÓN AL SERVIDOR
-            // Especificamos que la respuesta tiene la forma { user: User }
-            const response = await httpClient.put<{ user: User }>(`/users/${user.id}`, payload);
-            
-            onUserUpdated(response.user);
+            // Pasamos el ID y los datos
+            await onSubmit(user.id, payload);
+
+            // Si no lanza error, cerramos
             onClose();
         } catch {
-            setError('Error al actualizar. Verifica los datos.');
+            // Si el hook falla, aquí atrapamos el error visualmente
+            setError('No se pudo guardar los cambios.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative bg-bg-surface w-full max-w-md rounded-3xl shadow-2xl border border-border-base overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-border-base flex justify-between items-center bg-card-bg sticky top-0 z-10">
+            <div className="relative bg-bg-surface w-full max-w-lg rounded-3xl shadow-2xl border border-border-base overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+
+                {/* Header Fijo */}
+                <div className="px-6 py-4 border-b border-border-base flex justify-between items-center bg-card-bg shrink-0">
                     <h3 className="font-bold text-lg text-text-main">Editar Usuario</h3>
-                    <button onClick={onClose} className="text-text-muted hover:text-red-500 transition-colors">
+                    <button onClick={onClose} className="p-2 -mr-2 text-text-muted hover:text-red-500 transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {/* Alerta de Error */}
-                    {error && (
-                        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 text-red-600 dark:text-red-300 text-sm rounded-xl font-medium animate-pulse">
-                            {error}
+                {/* Body Scrolleable */}
+                <div className="overflow-y-auto p-6 custom-scrollbar">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {error && (
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl font-medium border border-red-100">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Nombre */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-muted mb-1.5">Nombre Completo</label>
+                            <input required type="text" className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main transition-all"
+                                value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            />
                         </div>
-                    )}
 
-                    {/* Nombre */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-muted mb-1">Nombre</label>
-                        <input 
-                            required
-                            type="text"
-                            className="w-full px-4 py-2.5 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main transition-all"
-                            value={formData.name}
-                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        />
-                    </div>
-
-                    {/* Correo */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-muted mb-1">Correo Electrónico</label>
-                        <input 
-                            required
-                            type="email"
-                            className="w-full px-4 py-2.5 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main transition-all"
-                            value={formData.email}
-                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        />
-                    </div>
-
-                    {/* Sección de Cambio de Contraseña */}
-                    <div className="pt-2 border-t border-border-base/50">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Lock size={16} className="text-brand-primary"/>
-                            <span className="text-sm font-bold text-text-main">Seguridad</span>
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-muted mb-1.5">Correo Electrónico</label>
+                            <input required type="email" className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main transition-all"
+                                value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            />
                         </div>
-                        
-                        <div className="space-y-3">
+
+                        {/* Roles y Estado (Responsive Grid) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-medium text-text-muted mb-1">
-                                    Nueva Contraseña <span className="font-normal opacity-70">(Opcional)</span>
-                                </label>
-                                <input 
-                                    type="password"
-                                    minLength={8}
-                                    placeholder="Dejar vacío para mantener la actual"
-                                    className="w-full px-4 py-2.5 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main placeholder:text-text-muted/40 transition-all"
-                                    value={formData.password}
-                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                />
-                            </div>
-
-                            {/* CAMPO DE CONFIRMACIÓN - Solo visible si se escribe contraseña */}
-                            {formData.password.length > 0 && (
-                                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <label className="block text-xs font-medium text-text-muted mb-1">
-                                        Confirmar Nueva Contraseña
-                                    </label>
-                                    <input 
-                                        type="password"
-                                        placeholder="Repite la contraseña"
-                                        className={`
-                                            w-full px-4 py-2.5 rounded-xl bg-bg-canvas border outline-none text-text-main transition-all
-                                            ${confirmPassword && formData.password !== confirmPassword 
-                                                ? 'border-red-300 focus:ring-2 focus:ring-red-200' 
-                                                : 'border-border-base focus:ring-2 focus:ring-brand-primary/20'}
-                                        `}
-                                        value={confirmPassword}
-                                        onChange={e => setConfirmPassword(e.target.value)}
-                                    />
-                                    {confirmPassword && formData.password !== confirmPassword && (
-                                        <p className="text-xs text-red-500 mt-1 ml-1">Las contraseñas no coinciden</p>
-                                    )}
+                                <label className="block text-sm font-medium text-text-muted mb-1.5">Rol</label>
+                                <div className="relative">
+                                    <select className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main appearance-none cursor-pointer"
+                                        value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
+                                    >
+                                        <option value="client">Cliente</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                                        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m1 1 4 4 4-4" /></svg>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </div>
 
-                    {/* Rol */}
-                    <div>
-                        <label className="block text-sm font-medium text-text-muted mb-1">Rol</label>
-                        <div className="relative">
-                            <select 
-                                className="w-full px-4 py-2.5 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main appearance-none cursor-pointer"
-                                value={formData.role}
-                                onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
-                            >
-                                <option value="client">Cliente (Estándar)</option>
-                                <option value="admin">Administrador</option>
-                            </select>
-                            {/* Flecha custom para el select */}
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
-                                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m1 1 4 4 4-4"/></svg>
+                            <div>
+                                <label className="block text-sm font-medium text-text-muted mb-1.5">Estado</label>
+                                <div className="relative">
+                                    <select
+                                        className={`w-full px-4 py-3 rounded-xl border border-border-base outline-none appearance-none font-medium cursor-pointer transition-colors
+                                            ${formData.is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
+                                        `}
+                                        value={formData.is_active ? "1" : "0"}
+                                        onChange={e => setFormData({ ...formData, is_active: e.target.value === "1" })}
+                                    >
+                                        <option value="1">Activada</option>
+                                        <option value="0">Inactiva</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-60">
+                                        <Activity size={18} />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Botones */}
-                    <div className="pt-4 flex gap-3">
-                        <button 
-                            type="button" 
-                            onClick={onClose} 
-                            className="flex-1 py-3 rounded-xl border border-border-base text-text-muted font-bold hover:bg-bg-canvas transition-colors"
-                        >
-                            Cancelar
-                        </button>
-                        <button 
-                            type="submit" 
-                            disabled={isLoading || (formData.password.length > 0 && formData.password !== confirmPassword)} 
-                            className="flex-1 py-3 rounded-xl bg-brand-primary text-white font-bold hover:bg-brand-dark transition-all active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? <Loader2 className="animate-spin" size={20}/> : <Save size={20} />}
-                            Guardar
-                        </button>
-                    </div>
-                </form>
+                        {/* Seguridad */}
+                        <div className="pt-4 border-t border-border-base/50">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Lock size={16} className="text-brand-primary" />
+                                <span className="text-sm font-bold text-text-main">Seguridad</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <input type="password" minLength={8} placeholder="Nueva contraseña (Opcional)"
+                                        className="w-full px-4 py-3 rounded-xl bg-bg-canvas border border-border-base focus:ring-2 focus:ring-brand-primary/20 outline-none text-text-main placeholder:text-text-muted/50 transition-all"
+                                        value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
+
+                                {formData.password.length > 0 && (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <input type="password" placeholder="Confirmar nueva contraseña"
+                                            className={`w-full px-4 py-3 rounded-xl bg-bg-canvas border outline-none text-text-main transition-all ${confirmPassword && formData.password !== confirmPassword ? 'border-red-300 focus:ring-red-200' : 'border-border-base focus:ring-brand-primary/20'}`}
+                                            value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                                        />
+                                        {confirmPassword && formData.password !== confirmPassword && (
+                                            <p className="text-xs text-red-500 mt-1 ml-1 font-medium">Las contraseñas no coinciden</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Botones */}
+                        <div className="pt-4 flex flex-col-reverse sm:flex-row gap-3">
+                            <button type="button" onClick={onClose} className="w-full sm:flex-1 py-3.5 rounded-xl border border-border-base text-text-muted font-bold hover:bg-bg-canvas transition-colors active:scale-95">
+                                Cancelar
+                            </button>
+                            <button type="submit" disabled={isLoading || (formData.password.length > 0 && formData.password !== confirmPassword)} className="w-full sm:flex-1 py-3.5 rounded-xl bg-brand-primary text-white font-bold hover:bg-brand-dark transition-all active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 shadow-lg shadow-brand-primary/20">
+                                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
