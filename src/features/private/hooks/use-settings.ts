@@ -1,139 +1,214 @@
-// Validaciones de campos para settins 
-import { useState, type FormEvent, type ChangeEvent } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/auth.services';
+import { httpClient } from '../../../utils/http-client';
+import { type User } from '../../../types/auth.types';
+import { type ModalType } from '../../../components/ui/status-modal';
 
-// Interfaz para el estado de errores
-interface FormErrors {
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-    text?: string;
+// Interfaz para cuentas conectadas
+export interface ConnectedAccount {
+    id: number;
+    email: string;
+    email_provider_id: number; // 1: Google, 2: Outlook
+    avatar?: string;
 }
 
 export const useSettings = () => {
-    // Limpiar campos
-    const initialState = { email: '', password: '', text: '', confirmPassword: '' };
-    // Estados
-    const [formData, setFormData] = useState({ email: '', password: '', text: '', confirmPassword: '' });
-    const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
-    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Limpiar campos
-    const handleReset = (e?: React.MouseEvent<HTMLButtonElement>) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        setFormData(initialState); // Limpia los datos
-        setErrors({});             // Limpia los errores
-    };
+    // Datos
+    const [user, setUser] = useState<User | null>(null);
+    const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    // --- ESTADO PARA TU STATUS MODAL (EXITO/ERROR) ---
+    const [statusModal, setStatusModal] = useState<{
+        isOpen: boolean;
+        type: ModalType;
+        title: string;
+        description: string;
+    }>({ isOpen: false, type: 'info', title: '', description: '' });
 
-        // Opcional: Limpiar el error cuando el usuario empieza a escribir de nuevo
-        if (errors[name as keyof FormErrors]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
-        }
-    };
+    const closeStatusModal = () => setStatusModal(prev => ({ ...prev, isOpen: false }));
 
-    // Función auxiliar para validar email
-    const validateEmail = (email: string) => {
-        // Regex estándar para email
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(email);
-    };
+    // Forms
+    const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+    const [passwordForm, setPasswordForm] = useState({ current_password: '', password: '', password_confirmation: '' });
 
-    // Logica de validaciones
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
+    const [errors, setErrors] = useState<any>({});
 
-        // 1. Validaciones previas
-        const newErrors: FormErrors = {};
-        if (!formData.text) {
-            newErrors.text = "Campo obligatorio";
-        }
-        if (!formData.email) {
-            newErrors.email = "El correo es obligatorio";
-        } else if (!validateEmail(formData.email)) {
-            newErrors.email = "El formato del correo no es válido";
-        }
-        //Campo de contraseña obligatorio
-        if (!formData.password) {
-            newErrors.password = "La contraseña es obligatoria";
-        } else if (formData.password.length < 8) {
-            newErrors.password = "La contraseña debe tener al menos 8 caracteres";
-        }
+    // Cargar datos
+    useEffect(() => {
+        loadSettings();
+    }, []);
 
-        //Validar Confirmación de Contraseña (Coincidencia)
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = "Debes confirmar la contraseña";
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = "Las contraseñas no coinciden";
-        }
-
-        // Si hay errores, los seteamos y detenemos el envío
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            return;
-        }
-
-        // 2. Si todo está bien, procedemos
-        setIsLoading(true);
-
+    const loadSettings = async () => {
         try {
-            console.log('Enviando datos:', formData);
-            // Simulación de API
-            setTimeout(() => {
-                setIsLoading(false);
-            }, 1000);
+            const data = await httpClient.get<{ user: User, connected_accounts: ConnectedAccount[] }>('/settings');
+            setUser(data.user);
+            setConnectedAccounts(data.connected_accounts || []);
+            setProfileForm({ name: data.user.name, email: data.user.email });
         } catch (error) {
-            console.error(error);
+            console.error("Error cargando configuración", error);
+        }
+    };
+
+    // --- PERFIL ---
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    };
+
+    const updateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setErrors({});
+        try {
+            await httpClient.put('/settings/profile', profileForm);
+            alert('Perfil actualizado');
+        } catch (error: any) {
+            setErrors(error.response?.data?.errors || {});
+        } finally {
             setIsLoading(false);
         }
     };
 
+    // --- PASSWORD ---
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPasswordForm({ ...passwordForm, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    };
 
-    // --- LÓGICA DE CIERRE DE SESIÓN (Logout) ---
+    const updatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordForm.password !== passwordForm.password_confirmation) {
+            setErrors({ password_confirmation: 'Las contraseñas no coinciden' });
+            return;
+        }
+        setIsLoading(true);
+        setErrors({});
+        try {
+            await httpClient.put('/settings/password', passwordForm);
+            alert('Contraseña actualizada');
+            setPasswordForm({ current_password: '', password: '', password_confirmation: '' });
+        } catch (error: any) {
+            setErrors(error.response?.data?.errors || {});
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // --- PROVIDERS ---
+    const connectProvider = (provider: 'google' | 'outlook') => {
+        window.location.href = `http://127.0.0.1:8000/auth/${provider}/redirect`;
+    };
+
+    const disconnectProvider = async (providerId: number) => {
+        if (!confirm('¿Desvincular esta cuenta?')) return;
+        setIsLoading(true);
+        try {
+            await httpClient.delete(`/settings/provider/${providerId}`);
+            setConnectedAccounts(prev => prev.filter(acc => acc.email_provider_id !== providerId));
+        } catch {
+            alert('Error al desvincular');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // --- LOGOUT ---
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    // 1. Abrir modal
-    const handleLogoutClick = () => {
-        setIsLogoutModalOpen(true);
-    };
-    // 2. Cancelar / Cerrar
-    const closeLogoutModal = () => {
-        if (!isLoggingOut) setIsLogoutModalOpen(false);
-    };
-    // 3. Confirmar Logout (Con spinner y timeout)
+    const handleLogoutClick = () => setIsLogoutModalOpen(true);
+    const closeLogoutModal = () => setIsLogoutModalOpen(false);
     const confirmLogout = () => {
         setIsLoggingOut(true);
         setTimeout(() => {
+            authService.logout();
             navigate('/auth/login');
-            authService.logout(); // Tu servicio de logout real
-            setIsLoggingOut(false);
-            setIsLogoutModalOpen(false);
-        }, 1500);
+        }, 1000);
     };
 
-    return {
-        formData,
-        errors,
-        isLoading,
-        handleInputChange,
-        handleSubmit,
-        handleReset,
+    // --- LOGICA ELIMINAR CUENTA ---
+    const [deletePassword, setDeletePassword] = useState('');
 
-        // Exportamos para el cierre de sesion
-        // Logout (Lo que necesitas)
+    // Estado para el modal de confirmación de eliminación
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+    // Validar password y abrir modal (Reemplaza el submit del form)
+    const requestDeleteAccount = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!deletePassword.trim()) {
+            // Puedes usar un toast o setear un error aquí
+            alert('Por favor ingresa tu contraseña para confirmar.');
+            return;
+        }
+
+        // Abrimos el modal personalizado en lugar de window.confirm
+        setIsDeleteModalOpen(true);
+    };
+
+    // Ejecutar la eliminación real (Se llama desde el Modal)
+    const executeDeleteAccount = async () => {
+        setIsLoading(true);
+        try {
+            await httpClient.put('/settings/account', {
+                data: { password: deletePassword }
+            });
+
+            authService.logout();
+            navigate('/auth/login');
+        } catch (error: any) {
+            // Cerramos el modal de confirmación primero
+            setIsDeleteModalOpen(false);
+
+            // Obtenemos el mensaje de error
+            const msg = error.response?.data?.message || 'Error al eliminar cuenta. Verifica tu contraseña.';
+
+            // ABRIMOS TU STATUS MODAL DE ERROR
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'No se pudo eliminar',
+                description: msg
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    return {
+        user,
+        connectedAccounts,
+        isLoading,
+        errors,
+        // Perfil
+        profileForm,
+        handleProfileChange,
+        updateProfile,
+        // Password
+        passwordForm,
+        handlePasswordChange,
+        updatePassword,
+        // Providers
+        connectProvider,
+        disconnectProvider,
+        // Logout
         isLogoutModalOpen,
         isLoggingOut,
-        handleLogoutClick, // Poner en el botón de cerrar sesión
-        confirmLogout,     // Poner en "Sí, salir" del modal
-        closeLogoutModal   // Poner en "Cancelar" del modal
+        handleLogoutClick,
+        closeLogoutModal,
+        confirmLogout,
+        //eliimnar
+        deletePassword,
+        setDeletePassword,
+        isDeleteModalOpen,
+        setIsDeleteModalOpen,
+        requestDeleteAccount,
+        executeDeleteAccount,
+        statusModal,
+        closeStatusModal
     };
 };

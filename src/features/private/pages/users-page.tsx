@@ -94,7 +94,7 @@ export const UsersPage = () => {
     if (loading) return <div className="flex justify-center items-center h-screen w-full"><Loader2 className="animate-spin text-brand-primary" size={40} /></div>;
 
     return (
-        <div className="flex flex-col h-full w-full p-4 md:p-8 overflow-y-auto">
+        <div className="flex flex-col h-full w-full p-4 md:p-8 overflow-y-auto bg-card-bg rounded-3xl border border-border-base shadow-lg">
             <div className="max-w-[1400px] mx-auto w-full space-y-6">
 
                 {/* Header */}
@@ -164,7 +164,7 @@ export const UsersPage = () => {
                 </div>
 
                 {/* --- VISTA DESKTOP (TABLA) --- */}
-                <div className="hidden md:block bg-bg-surface rounded-3xl shadow-sm border border-border-base overflow-hidden">
+                <div className="hidden md:block rounded-3xl shadow-sm border border- overflow-hidden border-b border-border-base bg-bg-canvas/30">
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-card-bg/50 border-b border-border-base text-xs text-text-muted uppercase">
                             <tr>
