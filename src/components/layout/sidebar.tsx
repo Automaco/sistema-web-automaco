@@ -57,7 +57,6 @@ export const Sidebar = () => {
     const confirmLogout = () => {
         setIsLoggingOut(true); // Activa el spinner en el modal
         setTimeout(() => {
-            navigate('/auth/login');
             setIsLoggingOut(false); // Desactiva el spinner
             authService.logout();
             setIsLogoutModalOpen(false);

@@ -2,6 +2,7 @@ import { authApi } from '../api/auth.api';
 import type { LoginResponse } from '../types/auth.types';
 
 export const authService = {
+    
     /**
      * Realiza el login y guarda la sesión automáticamente
      */
@@ -22,8 +23,10 @@ export const authService = {
      * Cierra sesión y limpia el almacenamiento
      */
     logout: async () => {
+        
         try {
             await authApi.logout();
+            window.location.href = "/auth/login";
         } finally {
             // Siempre limpiamos el storage, incluso si la API falla
             localStorage.removeItem('token');
