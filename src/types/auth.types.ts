@@ -29,6 +29,24 @@ export interface LoginResponse {
     user: User;
 }
 
+// Respuesta exitosa de la API
+export interface RegisterResponse {
+    mensage: string; // Nota: en la api dice 'mensage', entonces si se corrije cambiar aqui
+    access_token: string;
+    token_type: string;
+    user: User;
+}
+
+export interface RegisterCredentials {
+    name: string;
+    email: string;
+    password: string;
+}
+// Confirmacion de contraseña
+export interface RegisterPayload extends RegisterCredentials {
+    password_confirmation: string;
+}
+
 export interface LoginCredentials {
     email: string;
     password: string;

@@ -1,5 +1,5 @@
 import { httpClient } from '../utils/http-client';
-import type { LoginResponse, LoginCredentials } from '../types/auth.types';
+import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse } from '../types/auth.types';
 
 export const authApi = {
     /**
@@ -8,6 +8,14 @@ export const authApi = {
      */
     login: (credentials: LoginCredentials) => {
         return httpClient.post<LoginResponse>('/login', credentials);
+    },
+
+    /**
+     * Register
+     * Post /register
+     */
+    register: (payload: RegisterPayload) => {
+        return httpClient.post<RegisterResponse>('/register', payload);
     },
 
     /**

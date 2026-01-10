@@ -1,29 +1,34 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../../../services/auth.services';
+
 
 // Interfaz para el estado de errores
 interface FormErrors {
     email?: string;
     password?: string;
     confirmPassword?: string;
-    text?: string;
+    name?: string;
+    general?: string;
 }
 
 export const useRegister = () => {
     const navigate = useNavigate();
 
     // Estados
-    const [formData, setFormData] = useState({ email: '', password: '', text: '', confirmPassword: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
     const [isLoading, setIsLoading] = useState(false);
+    // Estado del modal 
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
         // Opcional: Limpiar el error cuando el usuario empieza a escribir de nuevo
-        if (errors[name as keyof FormErrors]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
+        if (errors.general || errors[name as keyof FormErrors]) {
+            setErrors(prev => ({ ...prev, [name]: undefined, general: undefined }));
         }
     };
 
@@ -39,8 +44,8 @@ export const useRegister = () => {
 
         // 1. Validaciones previas
         const newErrors: FormErrors = {};
-        if (!formData.text) {
-            newErrors.text = "Campo obligatorio";
+        if (!formData.name) {
+            newErrors.name = "Campo obligatorio";
         }
         if (!formData.email) {
             newErrors.email = "El correo es obligatorio";
@@ -71,23 +76,61 @@ export const useRegister = () => {
         setIsLoading(true);
 
         try {
-            console.log('Enviando datos:', formData);
+            // Se mapea los datos a enviar
+            const payload = {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword //El cambio clave
+            };
+            // Envio
+            const response = await authService.register(payload);
+            // mensaje de confimacion
+            console.log("Registro exitoso:", response);
+
+
             // Simulación de API
             setTimeout(() => {
                 setIsLoading(false);
                 navigate('/auth/login');
             }, 1000);
-        } catch (error) {
-            console.error(error);
+
+        } catch (error: any) {
+            // Error en consola
+            console.error('Error inesperado: ', error);
+            // Mensaje por defecto si todo falla
+            let errorMessage = "Ocurrio un error inesperado";
+
+            //Verificar si el servidor respondio (Data de la API)
+            if (error.response) {
+                const { status, data } = error.response;
+                // Email duplicado
+                if (status === 409) {
+                    errorMessage = data.message || "Ingrese un correo diferente";
+                } else if (status === 500) {
+                    // Error del servidor
+                    errorMessage = data.message || "Error del servidor";
+                }
+            } else if (error.request) {
+                errorMessage = "No hay conexión. Intente más tarde.";
+            } else if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            // Finalmente seteamos el mensaje dinámico
+            setErrors({ general: errorMessage });
+        } finally {
             setIsLoading(false);
         }
     };
 
+    const clearErrors = () => setErrors({});
     return {
         formData,
         errors,
         isLoading,
         handleInputChange,
-        handleSubmit
+        handleSubmit,
+        clearErrors
     };
 };

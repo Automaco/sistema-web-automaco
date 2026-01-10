@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react'; // Importamos el icono para el input general
 // Importamos ambos inputs
-import { Input, PasswordInput, Button } from '../../../components/index';
+import { Input, PasswordInput, Button, StatusModal } from '../../../components/index';
 import { useRegister } from '../hooks/use-register';
 
 
@@ -12,13 +12,38 @@ export const RegisterPage = () => {
         errors,
         isLoading,
         handleInputChange,
-        handleSubmit
+        handleSubmit,
+        clearErrors
     } = useRegister();
 
 
     return (
         // Contenedor principal
         <div className="flex h-screen w-full overflow-hidden">
+            {/* MODAL 
+                Se muestra automáticamente si existe errors.general.
+                Al cerrar, limpiamos el error en el hook.
+            */}
+            <StatusModal
+                isOpen={!!errors.general} // Convierte el string a boolean
+                onClose={clearErrors}
+                type="error"
+                title="Error de registro"
+                description={errors.general}
+                buttonText="Intentar de nuevo"
+            />
+            {/* MODAL 
+                Modal para mostrar confirmacion
+        
+            <StatusModal
+                isOpen={!!errors.general} // Convierte el string a boolean
+                onClose={clearErrors}
+                type="success"
+                title="Error de registro"
+                description={errors.general}
+                buttonText="Intentar de nuevo"
+            />    */}
+
             {/* SECCIÓN IZQUIERDA: Promoción */}
             {/* Esta sección mantiene sus colores fijos (blanco sobre verde) */}
             <div className="hidden lg:flex flex-col items-center w-1/2 justify-center h-full px-12 text-center text-white z-10">
@@ -57,12 +82,12 @@ export const RegisterPage = () => {
                         {/* 1. INPUT GENERAL (Con icono opcional) */}
                         <Input
                             label="Nombre de la institución"
-                            name="text"
+                            name="name"
                             type="text"
                             placeholder="Nombre"
-                            value={formData.text}
+                            value={formData.name}
                             onChange={handleInputChange}
-                            error={errors.text}
+                            error={errors.name}
                         />
 
                         {/* 2. INPUT GENERAL (Con icono opcional) */}

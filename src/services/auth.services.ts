@@ -1,8 +1,8 @@
 import { authApi } from '../api/auth.api';
-import type { LoginResponse } from '../types/auth.types';
+import type { LoginResponse, RegisterResponse, RegisterPayload } from '../types/auth.types';
 
 export const authService = {
-    
+
     /**
      * Realiza el login y guarda la sesión automáticamente
      */
@@ -19,11 +19,36 @@ export const authService = {
         return response;
     },
 
+
+    /**
+     * Realiza el register, registro de usuario
+     */
+    register: async (credentials: {
+        name: string; email: string; password: string; password_confirmation: string
+    }): Promise<RegisterResponse> => {
+        // Preparacion de datos
+        const payload: RegisterPayload = {
+            name: credentials.name,
+            email: credentials.email,
+            password: credentials.password,
+            password_confirmation: credentials.password //  se cumple con el parametro de la API
+        };
+        // Peticion a la API
+        const response = await authApi.register(payload);
+
+        // Como la API devuelve el token al registrarse, guardémoslo de una vez.
+        if (response.access_token) {
+            localStorage.setItem('token', response.access_token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+        }
+        return response;
+    },
+
     /**
      * Cierra sesión y limpia el almacenamiento
      */
     logout: async () => {
-        
+
         try {
             await authApi.logout();
             window.location.href = "/auth/login";
