@@ -5,176 +5,151 @@ import { MENU_ITEMS, type UserRole, type MenuItem } from '../../constants/menu-i
 import { ConfirmationModal } from '../../components/ui/confirmation-modal';
 import { authService } from '../../services/auth.services';
 import { type User } from '../../types/auth.types';
-
+import { ProfileSwitcher } from '../../components/profile-switcher'; 
 
 export const Sidebar = () => {
-
-    // OBTENER USUARIO REAL
+    // 1. OBTENER ROL DEL USUARIO
     const [userRole] = useState<UserRole>(() => {
         const userStr = localStorage.getItem('user');
         if (userStr) {
             try {
                 const user: User = JSON.parse(userStr);
-                // "as UserRole" fuerza a TypeScript a confiar en que el string es un rol válido
-                return user.role as UserRole;
+                return (user.role as UserRole) || 'client';
             } catch (error) {
-                console.error("Error leyendo usuario del storage", error);
-                return 'client' as UserRole; // Valor por defecto si falla el JSON
+                console.error("Error leyendo usuario", error);
+                return 'client' as UserRole;
             }
         }
         return 'client' as UserRole;
     });
 
-    // Estado Desktop
-    const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
-    // Estado Mobile
+    // Estados UI
+    // CAMBIO: Inicia en false (contraído)
+    const [isDesktopExpanded, setIsDesktopExpanded] = useState(false); 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    
+    // Estados Logout
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const navigate = useNavigate();
 
+    // Handlers UI
     const toggleDesktopSidebar = () => setIsDesktopExpanded(!isDesktopExpanded);
     const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
     const closeMobileMenu = () => setIsMobileOpen(false);
 
-    // Estado del Modal de Logout
-    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-    // Filtro de items
+    // Filtro Menu
     const filteredItems = MENU_ITEMS.filter(item => {
         if (!item.roles) return true;
         return item.roles.includes(userRole);
     });
 
-    //  Manejador inicial: Solo abre el modal
+    // Handlers Logout
     const handleLogoutClick = () => {
         setIsLogoutModalOpen(true);
-        // Si estamos en móvil, cerramos el menú para que se vea bien el modal
         if (isMobileOpen) closeMobileMenu();
     };
 
-    // Acción Real: Ejecuta el logout y redirige
     const confirmLogout = () => {
-        setIsLoggingOut(true); // Activa el spinner en el modal
+        setIsLoggingOut(true);
         setTimeout(() => {
-            setIsLoggingOut(false); // Desactiva el spinner
+            localStorage.removeItem('selected_account');
+            localStorage.removeItem('selected_account_id');
             authService.logout();
+            setIsLoggingOut(false);
             setIsLogoutModalOpen(false);
-        }, 1500);
-    };
-
-    // Props comunes para reutilizar en ambos menús
-    const commonProps = {
-        items: filteredItems,
-        handleLogout: handleLogoutClick,
-        navigate
+            navigate('/auth/login');
+        }, 1000);
     };
 
     return (
         <>
-            {/* --- MODAL DE CONFIRMACIÓN --- */}
             <ConfirmationModal
                 isOpen={isLogoutModalOpen}
-                onClose={() => !isLoggingOut && setIsLogoutModalOpen(false)} // Evita cerrar si está cargando
+                onClose={() => !isLoggingOut && setIsLogoutModalOpen(false)}
                 onConfirm={confirmLogout}
                 isLoading={isLoggingOut}
                 type="danger"
                 title="¿Cerrar sesión?"
-                description="¿Estás seguro de que quieres salir del sistema? Tendrás que volver a ingresar tus credenciales."
+                description="¿Estás seguro de que quieres salir del sistema?"
                 confirmText="Sí, salir"
                 cancelText="Cancelar"
             />
 
-            {/* =======================
-                MOBILE TRIGGER & MENU
-               ======================= */}
+            {/* --- MOBILE --- */}
             <div className="lg:hidden">
-                {/* Botón Hamburguesa Flotante */}
                 <button
                     onClick={toggleMobileMenu}
-                    className="fixed top-4 left-4 z-50 p-2.5 bg-bg-surface text-brand-primary rounded-xl shadow-lg border border-border-base active:scale-95 transition-transform"
+                    className="fixed top-4 left-4 z-40 p-2.5 bg-bg-surface text-brand-primary rounded-xl shadow-lg border border-border-base active:scale-95 transition-transform"
                 >
                     <Menu size={24} />
                 </button>
 
-                {/* Overlay Oscuro */}
                 {isMobileOpen && (
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
-                        onClick={closeMobileMenu}
-                    />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in" onClick={closeMobileMenu} />
                 )}
 
-                {/* Drawer Móvil */}
                 <MobileDrawer
                     isOpen={isMobileOpen}
                     onClose={closeMobileMenu}
-                    {...commonProps}
+                    items={filteredItems}
+                    handleLogout={handleLogoutClick}
                 />
             </div>
 
-            {/* =======================
-                DESKTOP SIDEBAR
-               ======================= */}
+            {/* --- DESKTOP --- */}
             <div className="hidden lg:block h-full">
                 <DesktopSidebar
                     isExpanded={isDesktopExpanded}
                     toggleExpanded={toggleDesktopSidebar}
-                    {...commonProps}
+                    items={filteredItems}
+                    handleLogout={handleLogoutClick}
                 />
             </div>
         </>
     );
 };
 
-// COMPONENTE MOBILE DRAWER
+// ==========================================
+// COMPONENTE: MOBILE DRAWER
+// ==========================================
 const MobileDrawer = ({ isOpen, onClose, items, handleLogout }: { isOpen: boolean; onClose: () => void; items: MenuItem[]; handleLogout: () => void }) => {
     return (
-        <aside
-            className={`
-                fixed top-0 left-0 z-50 h-screen flex flex-col
-                /* ANCHO RESPONSIVE: */
-                w-[85vw] sm:w-80 /* 85% de la pantalla en móviles, fijo en tablets */
-                max-w-[320px]    /* Nunca más ancho que 320px */
-                
-                bg-bg-surface border-r border-border-base shadow-2xl
-                transition-transform duration-300 ease-in-out
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-            `}
-        >
-            {/* HEADER MÓVIL 
-            */}
-            <div className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-border-base/50">
-                <span className="font-bold text-xl text-brand-primary truncate">
-                    AutomaCo
-                </span>
-
-                <button
-                    onClick={onClose}
-                    className="p-2 text-text-muted hover:text-red-500 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors"
-                    aria-label="Cerrar menú"
-                >
+        <aside className={`
+            fixed top-0 left-0 z-50 h-screen flex flex-col w-[85vw] sm:w-80 max-w-[320px]
+            bg-bg-surface border-r border-border-base shadow-2xl transition-transform duration-300 ease-in-out
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+            {/* Header Móvil */}
+            <div className="h-16 shrink-0 flex items-center justify-between px-4 border-b border-border-base/50">
+                <span className="font-bold text-xl text-brand-primary">AutomaCo</span>
+                <button onClick={onClose} className="p-2 text-text-muted hover:text-red-500 rounded-full transition-colors">
                     <X size={24} />
                 </button>
             </div>
 
-            {/* LISTA DE ITEMS */}
+            {/* Profile Switcher Integrado */}
+            <div className="p-4 pb-0">
+                <ProfileSwitcher isExpanded={true} />
+            </div>
+
+            {/* Separador */}
+            <div className="mx-4 my-2 border-b border-border-base/50"></div>
+
+            {/* Items */}
             <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
-                {items.filter((i: MenuItem) => !i.bottom).map((item: MenuItem) => (
+                {items.filter(i => !i.bottom).map(item => (
                     <MobileItem key={item.path} item={item} onClick={onClose} />
                 ))}
             </nav>
 
-            {/* BOTTOM SECTION */}
+            {/* Bottom Actions */}
             <div className="p-4 border-t border-border-base/50 flex flex-col gap-2 bg-bg-surface shrink-0">
-                {items.filter((i: MenuItem) => i.bottom).map((item: MenuItem) => (
+                {items.filter(i => i.bottom).map(item => (
                     <MobileItem key={item.path} item={item} onClick={onClose} />
                 ))}
-
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/10 font-medium transition-colors"
-                >
+                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/10 font-medium transition-colors">
                     <LogOut size={22} className="shrink-0" />
                     <span className="truncate">Cerrar sesión</span>
                 </button>
@@ -183,7 +158,6 @@ const MobileDrawer = ({ isOpen, onClose, items, handleLogout }: { isOpen: boolea
     );
 };
 
-// Item simple para móvil 
 const MobileItem = ({ item, onClick }: { item: MenuItem, onClick: () => void }) => (
     <NavLink
         to={item.path}
@@ -198,54 +172,54 @@ const MobileItem = ({ item, onClick }: { item: MenuItem, onClick: () => void }) 
     </NavLink>
 );
 
-
-// COMPONENTE DESKTOP SIDEBAR 
+// ==========================================
+// COMPONENTE: DESKTOP SIDEBAR
+// ==========================================
 const DesktopSidebar = ({ isExpanded, toggleExpanded, items, handleLogout }: { isExpanded: boolean; toggleExpanded: () => void; items: MenuItem[]; handleLogout: () => void }) => {
     return (
-        <aside
-            className={`
-                sticky top-4 left-4 h-[calc(100vh-2rem)] flex flex-col my-4 ml-4
-                bg-bg-surface border border-border-base rounded-3xl shadow-xl
-                transition-all duration-300 ease-in-out z-50
-                ${isExpanded ? 'w-64' : 'w-20'}
-            `}
-        >
-            {/* Logo Desktop */}
-            <div className="h-24 flex items-center justify-center relative shrink-0">
-                <div className="flex items-center gap-3 overflow-hidden px-4 cursor-pointer" onClick={toggleExpanded}>
-                    <div className="w-10 h-10 rounded-xl bg-brand-primary/20 flex items-center justify-center text-brand-primary font-bold shrink-0">
-                        A
-                    </div>
-                    <span className={`font-bold text-xl text-brand-primary transition-opacity duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                        AutomaCo
-                    </span>
-                </div>
-                {/* Flecha Toggle */}
-                <button onClick={toggleExpanded} className="absolute -right-3 top-10 bg-bg-surface border border-border-base text-text-muted hover:text-brand-primary rounded-full p-1 shadow-sm transition-colors z-50">
+        <aside className={`
+            sticky top-4 left-4 h-[calc(100vh-2rem)] flex flex-col my-4 ml-4
+            bg-bg-surface border border-border-base rounded-3xl shadow-xl
+            transition-all duration-300 ease-in-out z-50 
+            ${isExpanded ? 'w-72' : 'w-20'}
+        `}>
+            {/* Sección Perfil / Switcher */}
+            <div className="pt-4 px-2 pb-2 relative">
+                <ProfileSwitcher isExpanded={isExpanded} />
+                
+                {/* Botón Toggle */}
+                <button 
+                    onClick={toggleExpanded} 
+                    className="absolute -right-3 top-10 bg-bg-surface border border-border-base text-text-muted hover:text-brand-primary rounded-full p-1.5 shadow-sm transition-colors z-100"
+                >
                     {isExpanded ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                 </button>
             </div>
 
-            {/* Items Desktop */}
-            <nav className="flex-1 flex flex-col gap-3 p-3 py-6">
-                {items.filter((i: MenuItem) => !i.bottom).map((item: MenuItem) => (
+            <div className="mx-4 border-b border-border-base mb-2 opacity-50"></div>
+
+            {/* Items Navegación */}
+            {/* CAMBIO: custom-scrollbar para scroll vertical, overflow-x-hidden para evitar horizontal */}
+            <nav className="flex-1 flex flex-col gap-2 p-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                {items.filter(i => !i.bottom).map(item => (
                     <DesktopItem key={item.path} item={item} isExpanded={isExpanded} />
                 ))}
             </nav>
 
-            {/* Bottom Desktop */}
-            <div className="p-3 pb-6 flex flex-col gap-2 mt-auto shrink-0">
-                {items.filter((i: MenuItem) => i.bottom).map((item: MenuItem) => (
+            {/* Bottom Actions */}
+            <div className="p-3 pb-6 flex flex-col gap-2 mt-auto shrink-0 border-t border-border-base bg-bg-surface rounded-b-3xl">
+                {items.filter(i => i.bottom).map(item => (
                     <DesktopItem key={item.path} item={item} isExpanded={isExpanded} />
                 ))}
 
                 <button onClick={handleLogout} className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group text-text-muted hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/10 ${!isExpanded && 'justify-center'}`}>
                     <LogOut size={22} className="shrink-0" />
-                    <span className={`whitespace-nowrap font-medium transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>Cerrar sesión</span>
+                    <span className={`whitespace-nowrap font-medium transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+                        Cerrar sesión
+                    </span>
                     {!isExpanded && (
-                        <div className="absolute left-full ml-5 px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 z-50 whitespace-nowrap shadow-xl -translate-x-2.5 group-hover:translate-x-0">
+                        <div className="absolute left-full ml-4 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
                             Cerrar sesión
-                            <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 border-[6px] border-transparent border-r-brand-primary"></div>
                         </div>
                     )}
                 </button>
@@ -254,23 +228,25 @@ const DesktopSidebar = ({ isExpanded, toggleExpanded, items, handleLogout }: { i
     );
 };
 
-// Item complejo para Desktop 
 const DesktopItem = ({ item, isExpanded }: { item: MenuItem, isExpanded: boolean }) => (
     <NavLink
         to={item.path}
         className={({ isActive }) => `
-            flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-all duration-300 group relative
+            flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative
             ${!isExpanded && 'justify-center'}
             ${isActive ? 'bg-brand-primary/10 text-brand-primary font-semibold shadow-sm' : 'text-text-muted hover:bg-bg-canvas hover:text-text-main'}
         `}
     >
-        <div className="shrink-0 transition-transform duration-200 group-hover:scale-110">{item.icon}</div>
-        <span className={`whitespace-nowrap transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>{item.label}</span>
+        <div className="shrink-0 transition-transform duration-200 group-hover:scale-105">{item.icon}</div>
+        
+        {/* CAMBIO: overflow-hidden y w-0 para ocultar el texto sin romper el layout */}
+        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+            {item.label}
+        </span>
 
         {!isExpanded && (
-            <div className="absolute left-full ml-5 z-50 px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none -translate-x-2.5 group-hover:translate-x-0 transition-all duration-300 ease-out whitespace-nowrap shadow-xl">
+            <div className="absolute left-full ml-4 z-50 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl">
                 {item.label}
-                <div className="absolute left-0 top-1/2 -translate-x-full -translate-y-1/2 border-[6px] border-transparent border-r-brand-primary"></div>
             </div>
         )}
     </NavLink>

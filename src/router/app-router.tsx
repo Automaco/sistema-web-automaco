@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard } from '../layouts/index';
+import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard, AutoLogout } from '../layouts/index';
 import {
     LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage,
     ResetPasswordPage, ActiveAccountPage
@@ -44,7 +44,11 @@ export const router = createBrowserRouter([
 
     {
         path: '/users',
-        element: <PrivateGuard />,
+        element: (
+            <AutoLogout>
+                <PrivateGuard />
+            </AutoLogout>
+        ),
         children: [
             {
                 path: '',
@@ -66,7 +70,11 @@ export const router = createBrowserRouter([
     },
 
     {
-        element: <PrivateGuard />,
+        element: (
+            <AutoLogout>
+                <PrivateGuard />
+            </AutoLogout>
+        ),
         children: [
             // Selección de Cuentas
             {
@@ -87,7 +95,11 @@ export const router = createBrowserRouter([
             //DASHBOARD
             {
                 path: '/dashboard',
-                element: <PrivateLayout />,
+                element: (
+                    <AutoLogout>
+                        <PrivateGuard />
+                    </AutoLogout>
+                ),
                 children: [
                     {
                         //cambiar a dashboard
@@ -100,7 +112,11 @@ export const router = createBrowserRouter([
             //DTES
             {
                 path: '/dtes',
-                element: <PrivateLayout />,
+                element: (
+                    <AutoLogout>
+                        <PrivateLayout />
+                    </AutoLogout>
+                ),
                 children: [
                     {
                         path: '',

@@ -44,7 +44,7 @@ export const SelectProviderPage = () => {
             )}
 
             {/* CONTENIDO PRINCIPAL */}
-            <div className="w-full max-w-5xl flex flex-col items-center justify-center p-6 lg:p-16 relative min-h-[500px]">
+            <div className="w-full h-full max-w-5xl flex flex-col items-center justify-center p-6 lg:p-16 relative min-h-[500px]">
 
                 <div className="w-full lg:w-auto lg:absolute lg:top-8 lg:left-8 mb-8 lg:mb-0">
                     <button

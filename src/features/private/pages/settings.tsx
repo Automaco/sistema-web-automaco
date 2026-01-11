@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
+import { User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight, CheckCircle2, Loader2, ArrowLeft, Plus } from 'lucide-react';
 import { Input, PasswordInput, Button } from '../../../components/index';
 import { useSettings } from '../hooks/use-settings';
 import { ConfirmationModal } from '../../../components/ui/confirmation-modal';
@@ -20,7 +20,7 @@ export const SettingPage = () => {
     const { theme, toggleTheme } = useTheme();
 
     const isDarkMode = theme === 'dark';
-    const { isLogoutModalOpen, isLoggingOut, confirmLogout, closeLogoutModal, handleLogoutClick } = settingsHook;
+    const { isLogoutModalOpen, isLoggingOut, confirmLogout, closeLogoutModal, handleLogoutClick, statusModal, closeStatusModal } = settingsHook;
 
     // Handler para navegación móvil
     const handleSectionClick = (section: SectionType) => {
@@ -139,6 +139,7 @@ export const SettingPage = () => {
 
                 </div>
             </div>
+            <StatusModal isOpen={statusModal.isOpen} onClose={closeStatusModal} type={statusModal.type} title={statusModal.title} description={statusModal.description} />
         </div>
     );
 };
@@ -223,84 +224,162 @@ const ChangePasswordView = ({ hook }: ViewProps) => {
         </div>
     );
 };
+// --- HELPER PARA ESTILOS DE PROVEEDOR ---
+const getProviderStyles = (providerId: number) => {
+    switch (providerId) {
+        case 1: // Google
+            return {
+                name: 'Google',
+                // Fondo adaptable, borde sutil, texto con buen contraste
+                containerClass: 'border-border-base hover:border-red-500/30 dark:hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-900/10',
+                iconClass: 'bg-white dark:bg-neutral-800 text-red-600 dark:text-red-500 border border-gray-200 dark:border-neutral-700',
+                letter: 'G'
+            };
+        case 2: // Outlook
+            return {
+                name: 'Outlook',
+                // Fondo adaptable, borde sutil azul
+                containerClass: 'border-border-base hover:border-blue-500/30 dark:hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/10',
+                iconClass: 'bg-[#0078D4] text-white border border-transparent', // Outlook siempre azul solido se ve bien
+                letter: 'O'
+            };
+        default:
+            return {
+                name: 'Desconocido',
+                containerClass: 'border-border-base hover:bg-bg-canvas',
+                iconClass: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
+                letter: '?'
+            };
+    }
+};
 
 // VISTA EMAIL
 const EmailSettingsView = ({ hook }: ViewProps) => {
-    const { connectedAccounts, connectProvider, disconnectProvider, isLoading } = hook;
-    const googleAccount = connectedAccounts.find((acc: any) => acc.email_provider_id === 1);
-    const outlookAccount = connectedAccounts.find((acc: any) => acc.email_provider_id === 2);
+    const { 
+        connectedAccounts, 
+        connectProvider, 
+        isLoading, 
+        requestDisconnect, 
+        confirmDisconnect,
+        isDisconnectModalOpen,
+        closeDisconnectModal
+    } = hook;
 
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8 relative">
+            
+            <ConfirmationModal
+                isOpen={isDisconnectModalOpen}
+                onClose={closeDisconnectModal}
+                onConfirm={confirmDisconnect}
+                isLoading={isLoading}
+                type="danger" 
+                title="¿Desvincular cuenta?"
+                description="Dejarás de recibir los DTEs y correos asociados a esta cuenta. ¿Estás seguro?"
+                confirmText="Sí, desvincular"
+                cancelText="Cancelar"
+            />
+
+            {/* SECCIÓN 1: CUENTAS VINCULADAS */}
             <div>
-                <h2 className="text-2xl font-bold text-text-main">Cuentas Conectadas</h2>
-                <p className="text-text-muted text-sm mt-1">Gestiona los servicios externos vinculados para la descarga de DTEs.</p>
-            </div>
+                <h2 className="text-2xl font-bold text-text-main">Cuentas Vinculadas</h2>
+                <p className="text-text-muted text-sm mt-1 mb-4">
+                    Estas cuentas se utilizan para la lectura y descarga automática de DTEs.
+                </p>
 
-            <div className="grid gap-4">
-                {/* Google Card */}
-                <div className="p-5 rounded-2xl border border-border-base bg-bg-canvas flex flex-col sm:flex-row justify-between items-center gap-4 transition-all hover:border-border-base/80">
-                    <div className="flex items-center gap-4 w-full">
-                        <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center shadow-sm text-red-500 font-bold text-xl border border-border-base">G</div>
-                        <div>
-                            <h3 className="font-bold text-text-main">Google</h3>
-                            {googleAccount ? (
-                                <p className="text-sm text-green-600 flex items-center gap-1.5 font-medium mt-0.5">
-                                    <CheckCircle2 size={14} /> {googleAccount.email}
-                                </p>
-                            ) : (
-                                <p className="text-sm text-text-muted mt-0.5">Sin conectar</p>
-                            )}
+                <div className="flex flex-col gap-3">
+                    {/* ESTADO VACÍO */}
+                    {connectedAccounts.length === 0 && (
+                        <div className="p-8 rounded-2xl border border-dashed border-border-base bg-bg-canvas/30 flex flex-col items-center justify-center text-center">
+                            <div className="w-12 h-12 bg-bg-surface rounded-full flex items-center justify-center text-text-muted mb-3 shadow-sm border border-border-base">
+                                <Mail size={24} />
+                            </div>
+                            <h3 className="text-text-main font-medium">No tienes cuentas vinculadas</h3>
+                            <p className="text-text-muted text-sm mt-1 max-w-xs">
+                                Conecta una cuenta abajo para comenzar.
+                            </p>
                         </div>
-                    </div>
-                    {googleAccount ? (
-                        <button onClick={() => disconnectProvider(1)} disabled={isLoading} className="w-full sm:w-auto px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg font-medium transition-colors border border-transparent hover:border-red-100">
-                            Desvincular
-                        </button>
-                    ) : (
-                        <button onClick={() => connectProvider('google')} className="w-full sm:w-auto px-5 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                            Conectar
-                        </button>
                     )}
-                </div>
 
-                {/* Outlook Card */}
-                <div className="p-5 rounded-2xl border border-border-base bg-bg-canvas flex flex-col sm:flex-row justify-between items-center gap-4 transition-all hover:border-border-base/80">
-                    <div className="flex items-center gap-4 w-full">
-                        <div className="w-12 h-12 bg-[#0078D4] rounded-xl flex items-center justify-center shadow-sm text-white font-bold text-xl">O</div>
-                        <div>
-                            <h3 className="font-bold text-text-main">Outlook</h3>
-                            {outlookAccount ? (
-                                <p className="text-sm text-green-600 flex items-center gap-1.5 font-medium mt-0.5">
-                                    <CheckCircle2 size={14} /> {outlookAccount.email}
-                                </p>
-                            ) : (
-                                <p className="text-sm text-text-muted mt-0.5">Sin conectar</p>
-                            )}
-                        </div>
-                    </div>
-                    {outlookAccount ? (
-                        <button onClick={() => disconnectProvider(2)} disabled={isLoading} className="w-full sm:w-auto px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg font-medium transition-colors border border-transparent hover:border-red-100">
-                            Desvincular
-                        </button>
-                    ) : (
-                        <button onClick={() => connectProvider('outlook')} className="w-full sm:w-auto px-5 py-2 text-sm bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm">
-                            Conectar
-                        </button>
-                    )}
+                    {/* LISTA */}
+                    {connectedAccounts.map((account: any) => {
+                        const style = getProviderStyles(account.email_provider_id);
+                        
+                        return (
+                            <div key={account.id} className={`p-4 rounded-2xl border bg-bg-surface transition-all duration-200 ${style.containerClass}`}>
+                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                                    <div className="flex items-center gap-4 w-full">
+                                        {/* Icono */}
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm font-bold text-xl shrink-0 ${style.iconClass}`}>
+                                            {style.letter}
+                                        </div>
+                                        
+                                        <div className="overflow-hidden">
+                                            <h3 className="font-bold text-text-main text-base">{style.name}</h3>
+                                            <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5 font-medium mt-0.5 truncate">
+                                                <CheckCircle2 size={14} /> {account.email}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={() => requestDisconnect(account.id)} 
+                                        disabled={isLoading} 
+                                        className="w-full sm:w-auto px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg font-medium transition-colors border border-border-base hover:border-red-200 dark:hover:border-red-900 whitespace-nowrap bg-bg-canvas"
+                                    >
+                                        Desvincular
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
+
+            {/* SECCIÓN 2: VINCULAR NUEVA */}
+            <div className="pt-6 border-t border-border-base">
+                <h3 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
+                    <Plus size={20} className="text-brand-primary"/> Vincular nueva cuenta
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Botón Google */}
+                    <button 
+                        onClick={() => connectProvider('google')}
+                        className="flex items-center gap-4 p-4 rounded-xl border border-border-base bg-bg-surface hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-all group text-left shadow-sm"
+                    >
+                        <div className="w-10 h-10 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg flex items-center justify-center text-red-500 font-bold shadow-sm group-hover:scale-105 transition-transform">G</div>
+                        <div>
+                            <span className="block font-bold text-text-main">Google / Gmail</span>
+                            <span className="text-xs text-text-muted">Conectar vía OAuth</span>
+                        </div>
+                    </button>
+
+                    {/* Botón Outlook */}
+                    <button 
+                        onClick={() => connectProvider('outlook')}
+                        className="flex items-center gap-4 p-4 rounded-xl border border-border-base bg-bg-surface hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all group text-left shadow-sm"
+                    >
+                        <div className="w-10 h-10 bg-[#0078D4] text-white rounded-lg flex items-center justify-center font-bold shadow-sm group-hover:scale-105 transition-transform">O</div>
+                        <div>
+                            <span className="block font-bold text-text-main">Outlook</span>
+                            <span className="text-xs text-text-muted">Conectar vía Microsoft</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
         </div>
     );
 };
 
 // VISTA ELIMINAR
 const DeleteAccountView = ({ hook }: ViewProps) => {
-    const { 
-        deletePassword, 
-        setDeletePassword, 
-        isLoading, 
-        requestDeleteAccount, 
+    const {
+        deletePassword,
+        setDeletePassword,
+        isLoading,
+        requestDeleteAccount,
         executeDeleteAccount,
         isDeleteModalOpen,
         setIsDeleteModalOpen,
@@ -311,7 +390,7 @@ const DeleteAccountView = ({ hook }: ViewProps) => {
 
     return (
         <div className="flex flex-col items-center justify-center h-full text-center w-full max-w-lg mx-auto relative">
-            
+
             {/* 1. MODAL DE CONFIRMACIÓN (Pregunta: ¿Seguro?) */}
             <ConfirmationModal
                 isOpen={isDeleteModalOpen}
@@ -353,15 +432,15 @@ const DeleteAccountView = ({ hook }: ViewProps) => {
                     </label>
                     <PasswordInput
                         name="delete_password"
-                        label="" 
+                        label=""
                         placeholder="Tu contraseña actual"
                         value={deletePassword}
                         onChange={(e) => setDeletePassword(e.target.value)}
                     />
                 </div>
 
-                <Button 
-                    type="submit" 
+                <Button
+                    type="submit"
                     disabled={isLoading || deletePassword.length < 1}
                     className="w-full bg-red-600 hover:bg-red-700 text-white border-transparent shadow-lg shadow-red-500/20 flex justify-center items-center gap-2 h-12"
                 >

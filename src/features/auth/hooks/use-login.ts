@@ -31,7 +31,7 @@ export const useLogin = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        // --- VALIDACIONES (Igual que antes) ---
+        //VALIDACIONES
         const newErrors: FormErrors = {};
         if (!formData.email) newErrors.email = "El correo electrónico es obligatorio";
         else if (!validateEmail(formData.email)) newErrors.email = "El formato del correo no es válido";
@@ -51,21 +51,19 @@ export const useLogin = () => {
             // 1. Hacemos la petición
             const response = await authService.login(formData);
 
-            // VERIFICACIÓN DE ACTIVACIÓN (CAMBIO PRINCIPAL)
-            // Ahora la lógica de decisión está DENTRO del try, porque la API responde 200
+            // VERIFICACIÓN DE ACTIVACIÓN
             if (response.require_activation) {
-                // Si la bandera del backend dice true, mandamos a activar
                 navigate('/auth/active-account');
             } else {
                 // Si no requiere activación, entra al dashboard
-                navigate('/dashboard');
+                navigate('/accounts/select-account');
             }
 
         } catch (error) {
             console.error('Login failed', error);
             let errorMessage = "Ocurrió un error inesperado";
 
-            // "Type Guard": Verificamos si es un Error real antes de usarlo
+            // Verificamos si es un Error real antes de usarlo
             if (error instanceof Error) {
                 try {
                     // Intentamos leer el JSON del error si viene del httpClient
@@ -74,12 +72,12 @@ export const useLogin = () => {
                     errorMessage = parsed.message;
 
                 } catch {
-                    // Si no es JSON, usamos el mensaje directo
+                    // Mensaje por defecto si no es JSON
                     errorMessage = "Error de conexión";
                 }
             }
 
-            // Mapeo amigable para credenciales incorrectas (401)
+            // credenciales incorrectas (401)
             if (errorMessage.includes('Credenciales inválidas') || errorMessage.includes('Unauthorized')) {
                 errorMessage = 'Correo o contraseña incorrectos.';
             }

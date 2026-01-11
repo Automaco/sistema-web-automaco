@@ -6,11 +6,10 @@ import { httpClient } from '../../../utils/http-client';
 import { type User } from '../../../types/auth.types';
 import { type ModalType } from '../../../components/ui/status-modal';
 
-// Interfaz para cuentas conectadas
 export interface ConnectedAccount {
     id: number;
     email: string;
-    email_provider_id: number; // 1: Google, 2: Outlook
+    email_provider_id: number;
     avatar?: string;
 }
 
@@ -22,7 +21,7 @@ export const useSettings = () => {
     const [user, setUser] = useState<User | null>(null);
     const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
 
-    // --- ESTADO PARA TU STATUS MODAL (EXITO/ERROR) ---
+    // --- ESTADO PARA TU STATUS MODAL (CENTRALIZADO) ---
     const [statusModal, setStatusModal] = useState<{
         isOpen: boolean;
         type: ModalType;
@@ -35,7 +34,6 @@ export const useSettings = () => {
     // Forms
     const [profileForm, setProfileForm] = useState({ name: '', email: '' });
     const [passwordForm, setPasswordForm] = useState({ current_password: '', password: '', password_confirmation: '' });
-
     const [errors, setErrors] = useState<any>({});
 
     // Cargar datos
@@ -66,8 +64,19 @@ export const useSettings = () => {
         setErrors({});
         try {
             await httpClient.put('/settings/profile', profileForm);
-            alert('Perfil actualizado');
+            setStatusModal({
+                isOpen: true,
+                type: 'success',
+                title: 'Perfil Actualizado',
+                description: 'Tu información personal se ha guardado correctamente.'
+            });
         } catch (error: any) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Error al actualizar',
+                description: 'Hubo un problema al actualizar tu perfil. Revisa los errores e inténtalo de nuevo.'
+            });
             setErrors(error.response?.data?.errors || {});
         } finally {
             setIsLoading(false);
@@ -90,7 +99,12 @@ export const useSettings = () => {
         setErrors({});
         try {
             await httpClient.put('/settings/password', passwordForm);
-            alert('Contraseña actualizada');
+            setStatusModal({
+                isOpen: true,
+                type: 'success',
+                title: 'Contraseña Actualizada',
+                description: 'Tu contraseña ha sido modificada exitosamente.'
+            });
             setPasswordForm({ current_password: '', password: '', password_confirmation: '' });
         } catch (error: any) {
             setErrors(error.response?.data?.errors || {});
@@ -104,16 +118,49 @@ export const useSettings = () => {
         window.location.href = `http://127.0.0.1:8000/auth/${provider}/redirect`;
     };
 
-    const disconnectProvider = async (providerId: number) => {
-        if (!confirm('¿Desvincular esta cuenta?')) return;
+    const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+    const [accountToDisconnect, setAccountToDisconnect] = useState<number | null>(null);
+
+    // El usuario hace clic en "Desvincular" -> Abrimos modal y guardamos el ID
+    const requestDisconnect = (connectionId: number) => {
+        setAccountToDisconnect(connectionId);
+        setIsDisconnectModalOpen(true);
+    };
+
+    // Función para cerrar el modal y limpiar
+    const closeDisconnectModal = () => {
+        setIsDisconnectModalOpen(false);
+        setAccountToDisconnect(null);
+    };
+
+    const confirmDisconnect = async () => {
+        if (!accountToDisconnect) return;
+
         setIsLoading(true);
         try {
-            await httpClient.delete(`/settings/provider/${providerId}`);
-            setConnectedAccounts(prev => prev.filter(acc => acc.email_provider_id !== providerId));
+            // Llamada al backend con el ID único
+            await httpClient.delete(`/settings/provider/${accountToDisconnect}`);
+            
+            // Actualizamos la lista localmente
+            setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountToDisconnect));
+            
+            // Mensaje de éxito
+            setStatusModal({
+                isOpen: true,
+                type: 'success',
+                title: 'Cuenta Desvinculada',
+                description: 'Se ha eliminado la conexión correctamente.'
+            });
         } catch {
-            alert('Error al desvincular');
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Error',
+                description: 'No se pudo desvincular la cuenta.'
+            });
         } finally {
             setIsLoading(false);
+            closeDisconnectModal(); // Cerramos el modal
         }
     };
 
@@ -133,25 +180,23 @@ export const useSettings = () => {
 
     // --- LOGICA ELIMINAR CUENTA ---
     const [deletePassword, setDeletePassword] = useState('');
-
-    // Estado para el modal de confirmación de eliminación
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    // Validar password y abrir modal (Reemplaza el submit del form)
     const requestDeleteAccount = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!deletePassword.trim()) {
-            // Puedes usar un toast o setear un error aquí
-            alert('Por favor ingresa tu contraseña para confirmar.');
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Campo Requerido',
+                description: 'Por favor ingresa tu contraseña para confirmar.'
+            });
             return;
         }
-
-        // Abrimos el modal personalizado en lugar de window.confirm
         setIsDeleteModalOpen(true);
     };
 
-    // Ejecutar la eliminación real (Se llama desde el Modal)
     const executeDeleteAccount = async () => {
         setIsLoading(true);
         try {
@@ -162,13 +207,9 @@ export const useSettings = () => {
             authService.logout();
             navigate('/auth/login');
         } catch (error: any) {
-            // Cerramos el modal de confirmación primero
             setIsDeleteModalOpen(false);
-
-            // Obtenemos el mensaje de error
             const msg = error.response?.data?.message || 'Error al eliminar cuenta. Verifica tu contraseña.';
 
-            // ABRIMOS TU STATUS MODAL DE ERROR
             setStatusModal({
                 isOpen: true,
                 type: 'error',
@@ -179,35 +220,17 @@ export const useSettings = () => {
             setIsLoading(false);
         }
     };
+
     return {
-        user,
-        connectedAccounts,
-        isLoading,
-        errors,
-        // Perfil
-        profileForm,
-        handleProfileChange,
-        updateProfile,
-        // Password
-        passwordForm,
-        handlePasswordChange,
-        updatePassword,
-        // Providers
-        connectProvider,
-        disconnectProvider,
-        // Logout
-        isLogoutModalOpen,
-        isLoggingOut,
-        handleLogoutClick,
-        closeLogoutModal,
-        confirmLogout,
-        //eliimnar
-        deletePassword,
-        setDeletePassword,
-        isDeleteModalOpen,
-        setIsDeleteModalOpen,
-        requestDeleteAccount,
-        executeDeleteAccount,
+        user, connectedAccounts, isLoading, errors,
+        profileForm, handleProfileChange, updateProfile,
+        passwordForm, handlePasswordChange, updatePassword,
+        connectProvider, isDisconnectModalOpen,
+        closeDisconnectModal,
+        requestDisconnect, 
+        confirmDisconnect,
+        isLogoutModalOpen, isLoggingOut, handleLogoutClick, closeLogoutModal, confirmLogout,
+        deletePassword, setDeletePassword, isDeleteModalOpen, setIsDeleteModalOpen, requestDeleteAccount, executeDeleteAccount,
         statusModal,
         closeStatusModal
     };
