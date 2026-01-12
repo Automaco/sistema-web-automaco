@@ -15,6 +15,22 @@ interface RequestOptions {
 // URL base de la API.
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
+//Esto nos permitirá acceder a "err.data.message" o "err.status" en el frontend
+export class ApiError extends Error {
+    // 1. Declaramos las propiedades como variables de clase normales
+    status: number;
+    data: any;
+
+    constructor(status: number, data: any, message: string) {
+        super(message);
+        this.name = "ApiError";
+
+        // 2. Asignamos los valores manualmente
+        this.status = status;
+        this.data = data;
+    }
+}
+
 // T = Tipo de dato que se espera recibir como respuesta.
 // endpoint: Parte final de la URL, ejemplo "/usuarios".
 // options: Configuración como método, body y headers.
@@ -32,7 +48,7 @@ export const httpClient = async <T>(
         method,
         headers: {
             "Content-Type": "application/json", // El cuerpo se enviará como JSON.
-            "Accept": "application/json",     
+            "Accept": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...headers, // Mezclar headers personalizados (si existen).
         },
@@ -42,25 +58,50 @@ export const httpClient = async <T>(
     // Se espera que body sea un objeto serializable.
     if (body) config.body = JSON.stringify(body);
 
-    // Se realiza la petición a la API usando fetch.
-    const res = await fetch(`${BASE_URL}${endpoint}`, config);
 
-    // Manejo de errores: si la respuesta no está en 2xx.
-    if (!res.ok) {
-        // Si la API responde 401 → cerrar sesión
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.location.href = "/auth/login";
+
+    try {
+        // Se realiza la petición a la API usando fetch.
+        const res = await fetch(`${BASE_URL}${endpoint}`, config);
+        // Si la respuesta NO es ok (ej: 400, 401, 409, 422, 500)
+        // Manejo de errores: si la respuesta no está en 2xx.
+        if (!res.ok) {
+            // Manejo específico de 401 (Token vencido o inválido)
+            // Si la API responde 401 → cerrar sesión
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                window.location.href = "/auth/login";
+                // Lanzamos error para detener la ejecución
+                throw new ApiError(401, null, "Sesión expirada");
+            }
+
+            // Intentamos obtener el JSON de error que envía Laravel
+            let errorData;
+            try {
+                errorData = await res.json();
+            } catch (e) {
+                // Si el backend no devuelve el json
+                errorData = { message: "Error desconocido" };
+            }
+
+            // 1. message del backend
+            // 2. Error StatusText
+            const errorMessage = errorData.message || errorData.error || res.statusText;
+
+            // Lanzamos el error personalizado con la info
+            throw new ApiError(res.status, errorData, errorMessage);
         }
-
-        //const errorMessage = await res.text();
-        throw new Error("Error en el servidor, ponerse en contacto con el administrador.");
+        // Si todo esta bien delvolvemos el json
+        return res.json();
+    } catch (error) {
+        // Si el error es ApiError lo dejamos pasar
+        if (error instanceof ApiError) {
+            throw error;
+        }
+        // Si es un error de red (Sin internet, servidor apagado)
+        throw new Error("Error de conexión. Verifica tu conexión de internet o contacta a soporte")
     }
-
-    // Si todo está bien, se convierte la respuesta a JSON
-    // y se tipa automáticamente como <T>.
-    return res.json();
 };
 
 // ---------------------------------------------------------
