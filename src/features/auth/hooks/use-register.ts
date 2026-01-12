@@ -19,8 +19,8 @@ export const useRegister = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
     const [isLoading, setIsLoading] = useState(false);
-    // Estado del modal 
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // Estado del modal para la confirmacion de datos
+    const [IsSuccess, setSuccess] = useState('');
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -88,12 +88,8 @@ export const useRegister = () => {
             // mensaje de confimacion
             console.log("Registro exitoso:", response);
 
-
-            // Simulación de API
-            setTimeout(() => {
-                setIsLoading(false);
-                navigate('/auth/login');
-            }, 1000);
+            setSuccess(response.mensage || response.mensage || "Registro exitoso");
+            setIsLoading(false);
 
         } catch (error: any) {
             // Error en consola
@@ -122,8 +118,12 @@ export const useRegister = () => {
         } finally {
             setIsLoading(false);
         }
-    };
 
+    };
+    const resetSuccess = () => {
+        setSuccess('');
+        navigate('/auth/Login')
+    }
     const clearErrors = () => setErrors({});
     return {
         formData,
@@ -131,6 +131,8 @@ export const useRegister = () => {
         isLoading,
         handleInputChange,
         handleSubmit,
-        clearErrors
+        clearErrors,
+        IsSuccess,
+        resetSuccess
     };
 };

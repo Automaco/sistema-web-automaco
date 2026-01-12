@@ -13,7 +13,9 @@ export const RegisterPage = () => {
         isLoading,
         handleInputChange,
         handleSubmit,
-        clearErrors
+        clearErrors, // Modal de errores
+        IsSuccess,// Modal de confirmacion
+        resetSuccess // Reseteo de modal
     } = useRegister();
 
 
@@ -28,21 +30,21 @@ export const RegisterPage = () => {
                 isOpen={!!errors.general} // Convierte el string a boolean
                 onClose={clearErrors}
                 type="error"
-                title="Error de registro"
+                title="Datos erroneos"
                 description={errors.general}
                 buttonText="Intentar de nuevo"
             />
             {/* MODAL 
                 Modal para mostrar confirmacion
-        
+        */}
             <StatusModal
-                isOpen={!!errors.general} // Convierte el string a boolean
-                onClose={clearErrors}
+                isOpen={!!IsSuccess} // Convierte el string a boolean
+                onClose={resetSuccess}
                 type="success"
-                title="Error de registro"
-                description={errors.general}
-                buttonText="Intentar de nuevo"
-            />    */}
+                title="¡Cuenta Creada"
+                description={IsSuccess}
+                buttonText="Iniciar sesión"
+            />    
 
             {/* SECCIÓN IZQUIERDA: Promoción */}
             {/* Esta sección mantiene sus colores fijos (blanco sobre verde) */}
