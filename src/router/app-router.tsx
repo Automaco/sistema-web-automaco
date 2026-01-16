@@ -76,7 +76,6 @@ export const router = createBrowserRouter([
             </AutoLogout>
         ),
         children: [
-            // Selección de Cuentas
             {
                 path: '/accounts',
                 element: <AuthLayout />,
@@ -102,11 +101,18 @@ export const router = createBrowserRouter([
                 ),
                 children: [
                     {
-                        //cambiar a dashboard
                         path: '',
-                        element: <DashboardPage />,
+                        element: <PrivateLayout />,
+                        children: [
+                            {
+                                path: '',
+                                element: <DashboardPage />,
+                            }
+                        ]
+
                     }
                 ]
+
             },
 
             //DTES
@@ -120,10 +126,16 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         path: '',
-                        element: <DownloadDTEsPage />,
-
+                        element: <PrivateGuard />,
+                        children: [
+                            {
+                                path: '',
+                                element: <DownloadDTEsPage />,
+                            }
+                        ]
                     }
                 ]
+
             },
             // Settings
             {
@@ -132,7 +144,13 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         path: '',
-                        element: <SettingPage />,
+                        element: <PrivateGuard />,
+                        children: [
+                            {
+                                path: '',
+                                element: <SettingPage />,
+                            }
+                        ]
                     }
                 ]
             }
