@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { httpClient } from '../utils/http-client'; // Ajusta tu ruta si es necesario
-import { type User } from '../types/auth.types';   // Ajusta tu ruta
+import { httpClient } from '../utils/http-client'; 
+import { type User } from '../types/auth.types';  
 
 export interface ConnectedAccount {
     id: number;
@@ -10,59 +10,117 @@ export interface ConnectedAccount {
     avatar?: string;
 }
 
+// --- MEMORIA CACHÉ GLOBAL ---
+// Al estar fuera del hook, esta variable mantiene su valor aunque cambies de página.
+// Solo se borra si refrescas la página (F5) o si lo forzamos manualmente.
+let cachedAccounts: ConnectedAccount[] | null = null;
+let isFetchingPromise: Promise<ConnectedAccount[]> | null = null;
+
 export const useProfileSwitcher = () => {
     const navigate = useNavigate();
-    const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
-    const [currentAccount, setCurrentAccount] = useState<ConnectedAccount | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [accounts, setAccounts] = useState<ConnectedAccount[]>(cachedAccounts || []);
+    const [currentAccount, setCurrentAccount] = useState<ConnectedAccount | null>(() => {
+        // Inicialización perezosa: Intentamos leer del storage inmediatamente
+        const stored = localStorage.getItem('selected_account');
+        return stored ? JSON.parse(stored) : null;
+    });
+    
+    // Si ya tenemos datos en caché, no estamos cargando
+    const [isLoading, setIsLoading] = useState(!cachedAccounts);
 
-    // Cargar cuentas al montar
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // 1. Cargar lista del backend
-                const { data } = await httpClient.get<{ user: User, connected_accounts: ConnectedAccount[] }>('/settings');
-                setAccounts(data.connected_accounts || []);
+        const loadData = async () => {
+            // 1. SI YA TENEMOS DATOS EN CACHÉ, NO HACEMOS NADA
+            if (cachedAccounts) {
+                setAccounts(cachedAccounts);
+                checkCurrentAccount(cachedAccounts);
+                setIsLoading(false);
+                return;
+            }
 
-                // 2. Leer la seleccionada del LocalStorage
-                const stored = localStorage.getItem('selected_account');
-                
-                if (stored) {
-                    // Si ya hay una guardada, la usamos
-                    setCurrentAccount(JSON.parse(stored));
-                } else if (data.connected_accounts && data.connected_accounts.length > 0) {
-                    // Si no hay ninguna seleccionada pero existen cuentas, seleccionamos la primera por defecto
-                    const firstAccount = data.connected_accounts[0];
-                    setCurrentAccount(firstAccount);
-                    localStorage.setItem('selected_account', JSON.stringify(firstAccount));
-                    localStorage.setItem('selected_account_id', firstAccount.id.toString());
+            // 2. SI YA HAY UNA PETICIÓN EN PROCESO, LA ESPERAMOS (Evita doble llamada si usas el hook en 2 lugares)
+            if (isFetchingPromise) {
+                try {
+                    const data = await isFetchingPromise;
+                    setAccounts(data);
+                    checkCurrentAccount(data);
+                } catch (error) {
+                    console.error("Error esperando petición paralela", error);
+                } finally {
+                    setIsLoading(false);
                 }
+                return;
+            }
+
+            // 3. SI NO HAY CACHÉ NI PETICIÓN, LLAMAMOS A LA API
+            try {
+                // Guardamos la promesa para que otros componentes esperen esta misma llamada
+                isFetchingPromise = (async () => {
+                    const response = await httpClient.get<{ user: User, connected_accounts: ConnectedAccount[] }>('/settings');
+                    const loadedAccounts = response.connected_accounts || [];
+                    
+                    // Guardamos en la variable global (Caché)
+                    cachedAccounts = loadedAccounts; 
+                    return loadedAccounts;
+                })();
+
+                const data = await isFetchingPromise;
+                setAccounts(data);
+                checkCurrentAccount(data);
+
             } catch (error) {
                 console.error("Error cargando perfiles", error);
+                cachedAccounts = null; // Reseteamos caché si falló
             } finally {
                 setIsLoading(false);
+                isFetchingPromise = null; // Limpiamos la promesa al terminar
             }
         };
 
-        fetchData();
+        loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Función para cambiar de cuenta (Efecto Netflix)
+    // Helper interno para validar la cuenta seleccionada
+    const checkCurrentAccount = (list: ConnectedAccount[]) => {
+        const stored = localStorage.getItem('selected_account');
+        
+        if (stored) {
+            // Ya tenemos una, actualizamos el estado por si acaso cambió algo (ej: avatar)
+            const parsed = JSON.parse(stored);
+            // Opcional: Buscar la versión más reciente en la lista
+            const updated = list.find(a => a.id === parsed.id) || parsed;
+            setCurrentAccount(updated);
+        } else if (list.length > 0) {
+            // Seleccionar la primera por defecto
+            const firstAccount = list[0];
+            setCurrentAccount(firstAccount);
+            localStorage.setItem('selected_account', JSON.stringify(firstAccount));
+            localStorage.setItem('selected_account_id', firstAccount.id.toString());
+        }
+    };
+
+    // Función para cambiar de perfil (Lógica Netflix)
     const switchAccount = (account: ConnectedAccount) => {
-        // 1. Actualizar estado visual
         setCurrentAccount(account);
         
-        // 2. Guardar en Storage
         localStorage.setItem('selected_account', JSON.stringify(account));
         localStorage.setItem('selected_account_id', account.id.toString());
 
-        // 3. Recargar la página para que toda la app (Dashboard, Hooks, etc.) tome el nuevo ID fresco
+        // Al hacer reload, la variable 'cachedAccounts' se borrará automáticamente,
+        // lo cual es bueno para asegurar que los datos estén frescos al reiniciar la app.
         window.location.reload(); 
     };
 
-    // Ir a vincular nueva cuenta
+    // Ir a la página de configuración
     const handleAddAccount = () => {
-        navigate('/settings'); // O '/accounts/select-provider' según tus rutas
+        navigate('/settings'); 
+    };
+
+    // Método opcional por si necesitas forzar la recarga (ej: después de agregar una cuenta)
+    const forceRefresh = () => {
+        cachedAccounts = null;
+        window.location.reload();
     };
 
     return {
@@ -70,6 +128,7 @@ export const useProfileSwitcher = () => {
         currentAccount,
         isLoading,
         switchAccount,
-        handleAddAccount
+        handleAddAccount,
+        forceRefresh
     };
 };

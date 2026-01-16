@@ -50,7 +50,7 @@ export const UsersPage = () => {
         setCurrentPage(1); // Volver a la página 1 al filtrar
     };
 
-    // --- HANDLERS (Iguales que antes) ---
+    // --- HANDLERS ---
     const handleCreateUser = async (userPayload: any) => {
         const result = await addUser(userPayload);
         if (!result.success) throw new Error(result.message);

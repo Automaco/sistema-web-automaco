@@ -1,126 +1,113 @@
 // Tipos de métodos HTTP permitidos.
-// solo a estos métodos y evitar errores al escribir métodos no válidos.
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 // Interfaz que define las opciones opcionales al hacer una petición.
-// - method: Método HTTP (GET, POST, etc.)
-// - body: Cuerpo que se enviará al servidor (generalmente un objeto)
-// - headers: Encabezados personalizados como tokens, autorizaciones, etc.
 interface RequestOptions {
     method?: HttpMethod;
-    body?: unknown; // "unknown" es más seguro que "any" porque obliga a validar antes de usar.
+    body?: unknown;
     headers?: Record<string, string>;
+    responseType?: 'json' | 'blob' | 'text';
 }
 
 // URL base de la API.
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
-//Esto nos permitirá acceder a "err.data.message" o "err.status" en el frontend
+// Clase personalizada para errores de API
 export class ApiError extends Error {
-    // 1. Declaramos las propiedades como variables de clase normales
     status: number;
     data: any;
-
     constructor(status: number, data: any, message: string) {
         super(message);
         this.name = "ApiError";
-
-        // 2. Asignamos los valores manualmente
         this.status = status;
         this.data = data;
     }
 }
 
-// T = Tipo de dato que se espera recibir como respuesta.
-// endpoint: Parte final de la URL, ejemplo "/usuarios".
-// options: Configuración como método, body y headers.
+// Función principal genérica
 export const httpClient = async <T>(
     endpoint: string,
     options: RequestOptions = {}
 ): Promise<T> => {
-    // Se extraen los valores, con GET como método por defecto.
-    const { method = "GET", body, headers } = options;
+    // Valores por defecto
+    const { method = "GET", body, headers, responseType = 'json' } = options;
 
     const token = localStorage.getItem("token");
 
-    // Se construye la configuración que se enviará a fetch().
+    // Construcción de la configuración fetch
     const config: RequestInit = {
         method,
         headers: {
-            "Content-Type": "application/json", // El cuerpo se enviará como JSON.
+            // Solo ponemos Content-Type si hay body y no es FormData
+            ...(body && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
             "Accept": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...headers, // Mezclar headers personalizados (si existen).
+            ...headers,
         },
     };
 
-    // Si el método incluye cuerpo (POST, PUT), se convierte a JSON.
-    // Se espera que body sea un objeto serializable.
-    if (body) config.body = JSON.stringify(body);
-
-
+    if (body) {
+        // Si es FormData (archivos), no hacemos JSON.stringify
+        config.body = body instanceof FormData ? body : JSON.stringify(body);
+    }
 
     try {
-        // Se realiza la petición a la API usando fetch.
         const res = await fetch(`${BASE_URL}${endpoint}`, config);
-        // Si la respuesta NO es ok (ej: 400, 401, 409, 422, 500)
-        // Manejo de errores: si la respuesta no está en 2xx.
+
         if (!res.ok) {
-            // Manejo específico de 401 (Token vencido o inválido)
-            // Si la API responde 401 → cerrar sesión
             if (res.status === 401) {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
                 window.location.href = "/auth/login";
-                // Lanzamos error para detener la ejecución
                 throw new ApiError(401, null, "Sesión expirada");
             }
 
-            // Intentamos obtener el JSON de error que envía Laravel
             let errorData;
             try {
                 errorData = await res.json();
-            } catch (e) {
-                // Si el backend no devuelve el json
+            } catch {
                 errorData = { message: "Error desconocido" };
             }
 
-            // 1. message del backend
-            // 2. Error StatusText
             const errorMessage = errorData.message || errorData.error || res.statusText;
-
-            // Lanzamos el error personalizado con la info
             throw new ApiError(res.status, errorData, errorMessage);
         }
-        // Si todo esta bien delvolvemos el json
+
+        // Manejo del tipo de respuesta
+        if (responseType === 'blob') {
+            return (await res.blob()) as unknown as T;
+        }
+        if (responseType === 'text') {
+            return (await res.text()) as unknown as T;
+        }
+
+        // Por defecto JSON
         return res.json();
+
     } catch (error) {
-        // Si el error es ApiError lo dejamos pasar
         if (error instanceof ApiError) {
             throw error;
         }
-        // Si es un error de red (Sin internet, servidor apagado)
-        throw new Error("Error de conexión. Verifica tu conexión de internet o contacta a soporte")
+        throw new Error("Error de conexión. Verifica tu conexión de internet o contacta a soporte");
     }
 };
 
 // ---------------------------------------------------------
-// Métodos helper (atajos)
-// Estos permiten llamar más fácil a httpClient sin repetir options.
+// Métodos helper (atajos) CORREGIDOS
+// ---------------------------------------------------------
 
-// GET → No lleva cuerpo, solo endpoint.
-httpClient.get = <T>(endpoint: string) =>
-    httpClient<T>(endpoint, { method: "GET" });
+// GET: Acpta opciones extra
+httpClient.get = <T>(endpoint: string, options: Omit<RequestOptions, 'method' | 'body'> = {}) =>
+    httpClient<T>(endpoint, { method: "GET", ...options });
 
-// POST → Se envía un body con datos.
-// Ejemplo body esperado: { nombre: "Juan", edad: 20 }
-httpClient.post = <T>(endpoint: string, body: unknown) =>
-    httpClient<T>(endpoint, { method: "POST", body });
+// POST: Acepta body y opciones extra
+httpClient.post = <T>(endpoint: string, body: unknown, options: Omit<RequestOptions, 'method' | 'body'> = {}) =>
+    httpClient<T>(endpoint, { method: "POST", body, ...options });
 
-// PUT → Igual que POST pero para actualizar datos.
-httpClient.put = <T>(endpoint: string, body: unknown) =>
-    httpClient<T>(endpoint, { method: "PUT", body });
+// PUT
+httpClient.put = <T>(endpoint: string, body: unknown, options: Omit<RequestOptions, 'method' | 'body'> = {}) =>
+    httpClient<T>(endpoint, { method: "PUT", body, ...options });
 
-// DELETE → Solo se necesita el endpoint.
-httpClient.delete = <T>(endpoint: string) =>
-    httpClient<T>(endpoint, { method: "DELETE" });
+// DELETE: Ahora acepta opciones opcionales (a veces DELETE lleva body o headers especiales)
+httpClient.delete = <T>(endpoint: string, options: Omit<RequestOptions, 'method'> = {}) =>
+    httpClient<T>(endpoint, { method: "DELETE", ...options });
