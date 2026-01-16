@@ -11,14 +11,14 @@ export const invoicesApi = {
 
     // Descargar PDF (Blob)
     downloadPdf: async (id: number) => {
-        return await httpClient.get(`/invoices/${id}/pdf`, {
+        return await httpClient.get(`/invoices/${id}/download/pdf`, {
             responseType: 'blob'
         });
     },
 
     // Descargar JSON (Blob)
     downloadJson: async (id: number) => {
-        return await httpClient.get(`/invoices/${id}/json`, {
+        return await httpClient.get(`/invoices/${id}/download/json`, {
             responseType: 'blob'
         });
     }
