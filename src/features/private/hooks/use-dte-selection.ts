@@ -107,14 +107,21 @@ export const useDteSelection = () => {
             .filter(f => selectedFiles.includes(f.id));
 
         try {
-            // Descarga secuencial para no saturar el navegador/red
-            for (const file of filesToDownload) {
-                if (downloadFormat === 'pdf' || downloadFormat === 'both') {
-                    await invoicesService.downloadFile(file.rawId, 'pdf', file.name);
+
+            if (selectedFiles.length === 1) {
+                // Descarga secuencial para no saturar el navegador/red
+                for (const file of filesToDownload) {
+                    if (downloadFormat === 'pdf' || downloadFormat === 'both') {
+                        await invoicesService.downloadFile(file.rawId, 'pdf', file.name);
+                    }
+                    if (downloadFormat === 'json' || downloadFormat === 'both') {
+                        await invoicesService.downloadFile(file.rawId, 'json', file.name);
+                    }
                 }
-                if (downloadFormat === 'json' || downloadFormat === 'both') {
-                    await invoicesService.downloadFile(file.rawId, 'json', file.name);
-                }
+            }
+            else {
+                // Descarga como ZIP para múltiples archivos
+                await invoicesService.downloadAsZip(filesToDownload, downloadFormat);
             }
             setStatusModal({
                 isOpen: true,
@@ -162,7 +169,7 @@ export const useDteSelection = () => {
         isDownloading,
 
         // Modal State and Actions
-        statusModal, 
+        statusModal,
         closeStatusModal
     };
 };
