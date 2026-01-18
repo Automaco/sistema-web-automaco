@@ -15,7 +15,7 @@ export const DownloadDTEsPage = () => {
         isClientSelected, isYearSelected, isMonthSelected,
         downloadFormat, setDownloadFormat, handleDownloadSelected, isDownloading,
         statusModal, closeStatusModal, filters,
-        handleFilterChange
+        handleFilterChange, clearFilters
     } = useDteSelection();
 
     if (isLoading) {
@@ -30,6 +30,7 @@ export const DownloadDTEsPage = () => {
                 <DteFilters 
                     filters={filters} 
                     onFilterChange={handleFilterChange} 
+                    onClearFilters={clearFilters}
                 />
 
                 {/* Control Bar */}

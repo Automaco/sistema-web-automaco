@@ -14,6 +14,14 @@ export const useDteSelection = () => {
         endDate: ''
     });
 
+    const clearFilters = () => {
+        setFilters({
+            searchTerm: '',
+            startDate: '',
+            endDate: ''
+        });
+    };
+
     const handleFilterChange = (key: keyof typeof filters, value: string) => {
         setFilters(prev => ({ ...prev, [key]: value }));
     };
@@ -309,6 +317,7 @@ export const useDteSelection = () => {
         statusModal,
         closeStatusModal,
         filters, 
-        handleFilterChange
+        handleFilterChange,
+        clearFilters
     };
 };
