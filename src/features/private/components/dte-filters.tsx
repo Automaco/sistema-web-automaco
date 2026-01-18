@@ -30,11 +30,18 @@ export const DteFilters = ({ filters, onFilterChange, onClearFilters }: DteFilte
                     <h3>Selección de filtros</h3>
                 </div>
 
-                {/* BOTÓN LIMPIAR (Solo visible si hay filtros) */}
                 {hasActiveFilters && (
                     <button 
                         onClick={onClearFilters}
-                        className="flex items-center gap-1.5 text-xs font-medium text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors animate-in fade-in zoom-in-95"
+                        className="
+                            flex items-center gap-1.5 px-3 py-1.5 rounded-lg 
+                            text-xs font-medium transition-all animate-in fade-in zoom-in-95
+
+                            text-red-500 hover:text-red-600 
+                            border border-red-500/20 hover:border-red-500/40
+                            hover:bg-red-500/10 
+                            active:scale-95
+                        "
                     >
                         <X size={14} />
                         Limpiar filtros
