@@ -1,10 +1,12 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { MdEmail } from 'react-icons/md';
-import { useNavigate } from 'react-router-dom';
+import { authService } from '../../../services/auth.services';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ApiError } from '../../../utils/http-client';
 
 // Interfaz para el estado de errores
 interface FormErrors {
     email?: string;
+    general?: string;
 }
 
 export const useRecoverPassword = () => {
@@ -12,12 +14,12 @@ export const useRecoverPassword = () => {
 
     // Estados
     const [formData, setFormData] = useState({ email: '' });
-    const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
+    const [errors, setErrors] = useState<FormErrors>({}); // Nuevo estado de errores
 
     // --- ESTADOS DE UI (Cargas y Modal) ---
     const [isLoading, setIsLoading] = useState(false);     // Para el botón "Enviar instrucciones"
-    const [isVerifying, setIsVerifying] = useState(false); // Para el botón "Confirmar código" dentro del modal
-    const [isModalOpen, setIsModalOpen] = useState(false); // Controla si se ve la ventana emergente
+    const [IsSuccess, setIsSuccess] = useState(false);
+
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -25,7 +27,7 @@ export const useRecoverPassword = () => {
 
         // Opcional: Limpiar el error cuando el usuario empieza a escribir de nuevo
         if (errors[name as keyof FormErrors]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
+            setErrors(prev => ({ ...prev, [name]: undefined, general: undefined }));
         }
     };
 
@@ -36,7 +38,7 @@ export const useRecoverPassword = () => {
         return regex.test(email);
     };
 
-    const handleSendCode = async (e: FormEvent) => {
+    const handleSendLink = async (e: FormEvent) => {
         e.preventDefault();
 
         // 1. Validaciones previas
@@ -55,63 +57,43 @@ export const useRecoverPassword = () => {
 
         // 2. Si todo está bien, procedemos
         setIsLoading(true);
-
+        setErrors({}); // Limpiamos errores previos
+        /**
+         * ---- Llamada a la API ----
+         */
         try {
-            console.log('Enviando datos:', formData.email);
-            // Simulamos espera de API (1.5 segundos)
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            setIsLoading(false);
-
-            // 3. EN LUGAR DE REDIRIGIR, ABRIMOS EL MODAL
-            setIsModalOpen(true);
-        } catch (error) {
+            await authService.sendResetLink({ email: formData.email });
+            // Si todo sale bien, activamos el estado de exito
+            setIsSuccess(true);
+        } catch (error: any) {
             console.error(error);
+            let msg = 'El correo no esta vinculado con una cuenta existente';
+            if (error instanceof ApiError) {
+                msg = error.data?.message || error.message;
+            }
+            // Mostramos el error general
+            setErrors({ general: msg });
+        } finally {
             setIsLoading(false);
         }
     };
-
-    // --- PASO 2: VERIFICAR CÓDIGO (Dentro del Modal) ---
-    const handleVerifyCode = async () => {
-        setIsVerifying(true);
-        try {
-            console.log('Verificando codigo...');
-            // Simulacion de verificacion
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setIsVerifying(false);
-            // Cerramos el modal
-            setIsModalOpen(false);
-
-            // Se redirige a la pantalla de cambio de contraseña
-            navigate('/auth/reset-password',{
-                state:{
-                    verify: true, // Seguridad
-                    email:formData.email // Campo a utilizar
-                },
-                replace: true // evita que retroceda
-            })
-
-        } catch (error) {
-            console.error(error);
-            setIsVerifying(false);
-        }
+    // Funcion simple para ceerrar el modal
+    const closeSuccesModal = () => {
+        navigate('/auth/Login')
+        setIsSuccess(false);
     };
-
-    // --- AUXILIAR: CERRAR MODAL ---
-    const closeModal = () => {
-        setIsModalOpen(false);
-    }
+    const clearErrors = () => setErrors({});
     return {
         formData,
         errors,
         // Estados de UI
         isLoading,
-        isVerifying,
-        isModalOpen,
+        IsSuccess,
         // Funciones
         handleInputChange,
-        handleSendCode,   // Usar en el <form> principal
-        handleVerifyCode, // Usar en el botón del Modal
-        closeModal        // Usar en el botón 'X' del Modal
+        handleSendLink,   // Usar en el <form> principal
+        closeSuccesModal,
+        clearErrors
+
     };
 };

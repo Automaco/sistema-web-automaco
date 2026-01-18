@@ -1,5 +1,5 @@
 import { httpClient } from '../utils/http-client';
-import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse } from '../types/auth.types';
+import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload } from '../types/auth.types';
 
 export const authApi = {
     /**
@@ -18,6 +18,17 @@ export const authApi = {
         return httpClient.post<RegisterResponse>('/register', payload);
     },
 
+    /**
+     * Restablecimiento de contraseña
+     * 1. Envio de correo
+     */
+    sendLink: (payload: ForgotPasswordPayload) => {
+        return httpClient.post<AuthMessageResponse>('/send-reset-link', payload);
+    },
+    //Reseteo de contraseña
+    resetPassword: (payload: ResetPasswordPayload) => {
+        return httpClient.post<AuthMessageResponse>('/reset-password', payload);
+    },
     /**
      * Endpoint para cerrar sesión
      * POST /logout

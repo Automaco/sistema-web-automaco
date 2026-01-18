@@ -58,3 +58,21 @@ export interface ApiError {
     error?: string; // Para el caso 'account_not_activated'
 }
 
+/**
+ * --- Restablecimiento de contraseña
+ */
+export interface ForgotPasswordPayload {
+    email: string;
+}
+
+export interface ResetPasswordPayload {
+    token: string; // URL de Laravel que envia por correo
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
+
+// Respuesta generica para mensajes de texto de laravel
+export interface AuthMessageResponse {
+    message: string;
+}

@@ -1,5 +1,5 @@
 import { authApi } from '../api/auth.api';
-import type { LoginResponse, RegisterResponse, RegisterPayload } from '../types/auth.types';
+import type { LoginResponse, RegisterResponse, RegisterPayload, AuthMessageResponse, ResetPasswordPayload, ForgotPasswordPayload } from '../types/auth.types';
 
 export const authService = {
 
@@ -57,6 +57,20 @@ export const authService = {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }
+    },
+    /**
+     * Restablecimiento de contraseña
+     */
+
+    // 1. Envio del link para el reseteo de contraseña
+    sendResetLink: async (data: ForgotPasswordPayload): Promise<AuthMessageResponse> => {
+        // POST /send-reset-link
+        return await authApi.sendLink(data);
+    },
+    // 2. Ejecutar el cambio de contraseña
+    resetPassword: async (data: ResetPasswordPayload): Promise<AuthMessageResponse> => {
+        // pasamos todos los datos
+        return await authApi.resetPassword(data);
     },
 
     /**
