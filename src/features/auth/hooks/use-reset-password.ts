@@ -1,19 +1,38 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, type FormEvent, type ChangeEvent, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { authService } from '../../../services/auth.services';
+import { ApiError } from '../../../utils/http-client';
+import type { ResetPasswordPayload } from '../../../types/auth.types';
 
 // Interfaz para el estado de errores
 interface FormErrors {
     password?: string;
     confirmPassword?: string;
+    general?: string;
 }
 
 export const useResetPassword = () => {
     const navigate = useNavigate();
 
+    //1. Leemos la URL
+    const [SearchParams] = useSearchParams();
+    const token = SearchParams.get('token');
+    const email = SearchParams.get('email');
+
     // Estados
     const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
     const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
     const [isLoading, setIsLoading] = useState(false);
+    const [IsSuccess, setIsSuccess] = useState(false);
+
+    // Validacion si el link es valido
+    const isValidLink = !!token && !!email;
+
+    useEffect(() => {
+        if (!isValidLink) {
+            setErrors({ general: "El Enlace es inválido" });
+        }
+    }, [token, email, isValidLink]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -29,7 +48,7 @@ export const useResetPassword = () => {
         e.preventDefault();
         const newErrors: FormErrors = {};
 
-        // Validacion de campos
+        // Validacion de campos(Locales)
         //Campo de contraseña obligatorio
         if (!formData.password) {
             newErrors.password = "La contraseña es obligatoria";
@@ -44,31 +63,58 @@ export const useResetPassword = () => {
             newErrors.confirmPassword = "Las contraseñas no coinciden";
         }
 
+        // validacion del enlace
+        if (!isValidLink) {
+            newErrors.general = "Error en el enlace. Solicita uno nuevo";
+        }
+
         // Si hay errores  seteamos y detenemos el envio
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
         }
-        // Si todo esta bien
+
         setIsLoading(true);
-        // Simulacion de envio de datos
+
         try {
-            console.log('Enviando datos:', formData);
-            // Simulación de API
-            setTimeout(() => {
-                setIsLoading(false);
-                navigate('/auth/login');
-            }, 1000);
-        } catch (error) {
+            // Paquete de laravel (Mapeo de datos)
+            const payload: ResetPasswordPayload = {
+                token: token!, // URL
+                email: email!,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword
+            };
+            await authService.resetPassword(payload);
+            // Abrimos el modal de exito
+            setIsSuccess(true);
+
+        } catch (error: any) {
             console.error(error);
+            let msg = "Error al restablecer contraseña";
+            if (error instanceof ApiError) {
+                msg = error.data?.message || error.message;
+            }
+            setErrors({ general: msg });
+        } finally {
             setIsLoading(false);
         }
     };
+
+    const closeSuccessModal = () => {
+        setIsSuccess(false);
+        navigate('/auth/login');
+    };
+    const clearErrors = () => setErrors({});
+
     return {
         formData,
         errors,
         isLoading,
+        IsSuccess, //Estado del modal
         handleInputChange,
-        handleSubmit
+        handleSubmit,
+        closeSuccessModal,
+        isValidLink,
+        clearErrors
     };
 };

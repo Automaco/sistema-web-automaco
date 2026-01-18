@@ -79,7 +79,7 @@ export const useRecoverPassword = () => {
     };
     // Funcion simple para ceerrar el modal
     const closeSuccesModal = () => {
-        navigate('/auth/Login')
+        navigate('/auth/login')
         setIsSuccess(false);
     };
     const clearErrors = () => setErrors({});
