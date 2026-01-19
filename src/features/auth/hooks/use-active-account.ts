@@ -11,7 +11,7 @@ export const useActiveAccount = () => {
 
     // Estados
     const [formData, setFormData] = useState({ licenseKey: '' });
-    const [errors, setErrors] = useState<FormErrors>({}); // 👈 Nuevo estado de errores
+    const [errors, setErrors] = useState<FormErrors>({}); //  Nuevo estado de errores
     const [isLoading, setIsLoading] = useState(false);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +51,7 @@ export const useActiveAccount = () => {
             // Simulación de API
             setTimeout(() => {
                 setIsLoading(false);
-                navigate('/auth/dashboard');
+                navigate('/dashboard');
             }, 1000);
         } catch (error) {
             console.error(error);

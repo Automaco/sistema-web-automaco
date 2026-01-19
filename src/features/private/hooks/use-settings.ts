@@ -201,7 +201,7 @@ export const useSettings = () => {
         setIsLoading(true);
         try {
             await httpClient.put('/settings/account', {
-                data: { password: deletePassword }
+                password: deletePassword 
             });
 
             authService.logout();
