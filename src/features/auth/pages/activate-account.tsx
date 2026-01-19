@@ -1,20 +1,43 @@
 /* -- Pagina de activacion de licencia -- */
 import { Link } from 'react-router-dom';// Importamos ambos inputs
-import { CodeInput, Button } from '../../../components/index'; // Input para clave
+import { CodeInput, Button, StatusModal } from '../../../components/index'; // Input para clave
 import { useActiveAccount } from '../hooks/use-active-account';
+
 
 export const ActiveAccountPage = () => {
     const {
         formData,
         errors,
         isLoading,
+        handleInputChange,
         handleSubmit,
-        handleCodeChange
+        IsSuccess,
+        handleSuccessClose,
+        clearErrors
     } = useActiveAccount();
 
     return (
         // 👇 AQUÍ ESTÁ EL CAMBIO: Agregué 'items-center'
         <div className="flex h-screen w-full overflow-hidden justify-center items-center">
+
+            {/*MODALS */}
+            <StatusModal
+                isOpen={!!IsSuccess}
+                onClose={handleSuccessClose}
+                type='success'
+                title='!Cuenta activada con éxito!'
+                description='Tu cuenta ha sido verificada correctamente. Redirigiendo al dashboard...'
+                buttonText='Hecho'
+            />
+            <StatusModal
+                isOpen={!!errors.general}
+                onClose={clearErrors}
+                type='error'
+                title='No es posible activar la cuenta'
+                description={errors.general || 'Contacta a soporte'}
+                buttonText='Intentar de nuevo'
+            />
+
 
             {/* SECCIÓN IZQUIERDA: Formulario */}
             <div className=" w-full sm:w-full max-w-[600px] max-h-[650px] flex flex-col justify-center items-center p-6 sm:p-8 border border-white/50 bg-bg-surface relative z-10 shadow-2xl rounded-tr-[3vw] rounded-br-[3vw] rounded-tl-[3vw] rounded-bl-[3vw] transition-colors duration-300">
@@ -34,14 +57,14 @@ export const ActiveAccountPage = () => {
                 <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 items-center justify-center mt-5">
                     <CodeInput
                         label="Ingresa el código de activacion"
-                        name="licenseKey"
+                        name="code"
                         placeholder="XXXX-XXXX-XXXX-XXXX"
-                        value={formData.licenseKey}
-                        onChange={handleCodeChange}
-                        maxLength={19}
-                        error={errors.licenseKey}
+                        value={formData.code}
+                        onChange={handleInputChange}
+                        maxLength={6}
+                        error={errors.code}
                     />
-                    <Button type="submit" className="mt-4" disabled={isLoading} >
+                    <Button type="submit" className="mt-4" disabled={isLoading || !formData.code} >
                         {isLoading ? 'Redireccionando...' : 'Activar'}
                     </Button>
                 </form>

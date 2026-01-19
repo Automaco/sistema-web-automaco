@@ -76,3 +76,20 @@ export interface ResetPasswordPayload {
 export interface AuthMessageResponse {
     message: string;
 }
+
+/**
+ * Activacion de cuenta
+ */
+export interface ActivateAccountPayload {
+    code: string;
+}
+
+export interface ActivateAccountResponse {
+    message: string;
+    user?: User;
+}
+
+export interface ActivacionErrorResponse {
+    message: string;
+    error?: string;
+}

@@ -1,5 +1,5 @@
 import { httpClient } from '../utils/http-client';
-import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload } from '../types/auth.types';
+import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload, type ActivacionErrorResponse, type ActivateAccountPayload, type ActivateAccountResponse } from '../types/auth.types';
 
 export const authApi = {
     /**
@@ -28,6 +28,10 @@ export const authApi = {
     //Reseteo de contraseña
     resetPassword: (payload: ResetPasswordPayload) => {
         return httpClient.post<AuthMessageResponse>('/reset-password', payload);
+    },
+    // Activacion de cuenta
+    activationAccount: (payload: ActivateAccountPayload) => {
+        return httpClient.post<ActivateAccountResponse>('/activate', payload);
     },
     /**
      * Endpoint para cerrar sesión
