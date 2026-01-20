@@ -48,9 +48,14 @@ export const useAccountSelection = () => {
         fetchAccounts();
     }, []);
 
-    const handleSelectAccount = (account: ConnectedAccount) => {
+    const handleSelectAccount = (account: ConnectedAccount) => { 
         localStorage.setItem('selected_account', JSON.stringify(account));
         localStorage.setItem('selected_account_id', account.id.toString());
+
+        //Hacer mis cositas aqui
+        //Obtener el user_id antes de comenzar la logica del post
+
+
         navigate('/dashboard');
     };
 

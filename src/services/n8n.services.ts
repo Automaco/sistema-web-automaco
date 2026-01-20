@@ -1,0 +1,1 @@
+//Preparo el cuerpo, utilizo el codigo de n8n.api y espero a la respuesta del servidor. (exito o cagada)
