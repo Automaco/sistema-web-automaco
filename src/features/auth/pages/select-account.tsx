@@ -1,6 +1,8 @@
 import { Plus, Loader2, Mail } from 'lucide-react';
 import { AccountCard } from '../../../components/account-card';
 import { useAccountSelection, type ConnectedAccount } from '../hooks/use-account-selection';
+import { StatusModal } from '../../../components/index';
+
 
 // Componentes visuales para los iconos
 const GoogleIcon = () => (
@@ -23,7 +25,14 @@ const DefaultIcon = () => (
 
 export const AccountListPage = () => {
     // Usamos el hook para toda la lógica
-    const { accounts, isLoading, handleSelectAccount, handleAddAccount } = useAccountSelection();
+    const { accounts,
+        isLoading,
+        errors,
+        clearErrors,
+        handleSelectAccount,
+        IsSuccess,
+        CloseSuccesModal,
+        handleAddAccount } = useAccountSelection();
 
     if (isLoading) {
         return (
@@ -35,7 +44,28 @@ export const AccountListPage = () => {
 
     return (
         <div className="w-full max-w-5xl flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 min-h-[80vh]">
-
+            {/**
+        * Estados de modal: Exito
+        */}
+            <StatusModal
+                isOpen={!!IsSuccess}
+                onClose={CloseSuccesModal}
+                type='success'
+                title='!Exito¡'
+                description='Tus archivos se muestraran pronto'
+                buttonText='Ir'
+            />
+            {/**
+        * Estados de modal: Falso
+        */}
+            <StatusModal
+                isOpen={!!errors.general}
+                onClose={clearErrors}
+                type='error'
+                title='!Ocurrio un error'
+                description={errors.general}
+                buttonText='Entendido'
+            />
             <div className="text-center mb-12 animate-fade-in-down">
                 <h1 className="text-4xl font-bold text-text-adaptive mb-3 drop-shadow-sm">
                     Elige tu perfil
