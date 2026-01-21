@@ -20,7 +20,6 @@ export const useProfileSwitcher = () => {
     const navigate = useNavigate();
     const [accounts, setAccounts] = useState<ConnectedAccount[]>(cachedAccounts || []);
     const [currentAccount, setCurrentAccount] = useState<ConnectedAccount | null>(() => {
-        // Inicialización perezosa: Intentamos leer del storage inmediatamente
         const stored = localStorage.getItem('selected_account');
         return stored ? JSON.parse(stored) : null;
     });
@@ -30,7 +29,7 @@ export const useProfileSwitcher = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            // 1. SI YA TENEMOS DATOS EN CACHÉ, NO HACEMOS NADA
+            // SI YA TENEMOS DATOS EN CACHÉ, NO HACEMOS NADA
             if (cachedAccounts) {
                 setAccounts(cachedAccounts);
                 checkCurrentAccount(cachedAccounts);
@@ -38,7 +37,7 @@ export const useProfileSwitcher = () => {
                 return;
             }
 
-            // 2. SI YA HAY UNA PETICIÓN EN PROCESO, LA ESPERAMOS (Evita doble llamada si usas el hook en 2 lugares)
+            // SI YA HAY UNA PETICIÓN EN PROCESO, LA ESPERAMOS (Evita doble llamada si usas el hook en 2 lugares)
             if (isFetchingPromise) {
                 try {
                     const data = await isFetchingPromise;
@@ -52,7 +51,7 @@ export const useProfileSwitcher = () => {
                 return;
             }
 
-            // 3. SI NO HAY CACHÉ NI PETICIÓN, LLAMAMOS A LA API
+            // SI NO HAY CACHÉ NI PETICIÓN, LLAMAMOS A LA API
             try {
                 // Guardamos la promesa para que otros componentes esperen esta misma llamada
                 isFetchingPromise = (async () => {
@@ -114,7 +113,7 @@ export const useProfileSwitcher = () => {
 
     // Ir a la página de configuración
     const handleAddAccount = () => {
-        navigate('/settings'); 
+        navigate('/settings#email'); 
     };
 
     // Método opcional por si necesitas forzar la recarga (ej: después de agregar una cuenta)

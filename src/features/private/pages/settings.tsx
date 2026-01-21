@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { User, Moon, Lock, Mail, Trash2, LogOut, ChevronRight, CheckCircle2, Loader2, ArrowLeft, Plus } from 'lucide-react';
 import { Input, PasswordInput, Button } from '../../../components/index';
 import { useSettings } from '../hooks/use-settings';
@@ -15,17 +16,43 @@ interface ViewProps {
 
 export const SettingPage = () => {
     const settingsHook = useSettings();
-    const [activeSection, setActiveSection] = useState<SectionType>('profile');
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(true); // Control para móviles
     const { theme, toggleTheme } = useTheme();
 
     const isDarkMode = theme === 'dark';
     const { isLogoutModalOpen, isLoggingOut, confirmLogout, closeLogoutModal, handleLogoutClick, statusModal, closeStatusModal } = settingsHook;
 
-    // Handler para navegación móvil
+    //Logica para determinar la sección activa basada en el hash de la URL
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Definimos las secciones válidas fuera o en una constante
+    const validSections: SectionType[] = ['profile', 'password', 'email', 'delete'];
+
+    // Función auxiliar para limpiar el hash
+    const getSectionFromHash = (hash: string): SectionType => {
+        const cleanHash = hash.replace('#', '');
+        // Si el hash coincide con una sección válida, la devuelve, si no, devuelve 'profile'
+        return validSections.includes(cleanHash as SectionType) ? (cleanHash as SectionType) : 'profile';
+    };
+    // Esto lee window.location.hash DIRECTAMENTE al cargar, ignorando retardos de React Router.
+    const [activeSection, setActiveSection] = useState<SectionType>(() => {
+        return getSectionFromHash(window.location.hash);
+    });
+
+    //useEffect para escuchar cambios POSTERIORES (ej. si el usuario navega manualmente)
+    useEffect(() => {
+        const newSection = getSectionFromHash(location.hash);
+        // Solo actualizamos si es diferente para evitar re-renders innecesarios
+        if (newSection !== activeSection) {
+            setActiveSection(newSection);
+        }
+    }, [location.hash]); // Dependencia: solo se ejecuta si cambia el hash
+
+    // Control menú móvil
+    const isMobileMenuOpen = !location.hash;
+
     const handleSectionClick = (section: SectionType) => {
-        setActiveSection(section);
-        setIsMobileMenuOpen(false); // Ocultar menú en móvil al seleccionar
+        navigate(`#${section}`);
     };
 
     return (
@@ -121,7 +148,12 @@ export const SettingPage = () => {
                     `}>
                         {/* Header Móvil del Panel Derecho */}
                         <div className="lg:hidden p-4 border-b border-border-base flex items-center gap-2">
-                            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -ml-2 rounded-lg hover:bg-bg-canvas text-text-muted">
+                            <button
+                                onClick={() => {
+                                    navigate('/settings');
+                                }}
+                                className="p-2 -ml-2 rounded-lg hover:bg-bg-canvas text-text-muted"
+                            >
                                 <ArrowLeft size={20} />
                             </button>
                             <span className="font-bold text-text-main">Volver</span>
@@ -255,11 +287,11 @@ const getProviderStyles = (providerId: number) => {
 
 // VISTA EMAIL
 const EmailSettingsView = ({ hook }: ViewProps) => {
-    const { 
-        connectedAccounts, 
-        connectProvider, 
-        isLoading, 
-        requestDisconnect, 
+    const {
+        connectedAccounts,
+        connectProvider,
+        isLoading,
+        requestDisconnect,
         confirmDisconnect,
         isDisconnectModalOpen,
         closeDisconnectModal
@@ -267,13 +299,13 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
 
     return (
         <div className="flex flex-col gap-8 relative">
-            
+
             <ConfirmationModal
                 isOpen={isDisconnectModalOpen}
                 onClose={closeDisconnectModal}
                 onConfirm={confirmDisconnect}
                 isLoading={isLoading}
-                type="danger" 
+                type="danger"
                 title="¿Desvincular cuenta?"
                 description="Dejarás de recibir los DTEs y correos asociados a esta cuenta. ¿Estás seguro?"
                 confirmText="Sí, desvincular"
@@ -304,7 +336,7 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
                     {/* LISTA */}
                     {connectedAccounts.map((account: any) => {
                         const style = getProviderStyles(account.email_provider_id);
-                        
+
                         return (
                             <div key={account.id} className={`p-4 rounded-2xl border bg-bg-surface transition-all duration-200 ${style.containerClass}`}>
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -313,7 +345,7 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm font-bold text-xl shrink-0 ${style.iconClass}`}>
                                             {style.letter}
                                         </div>
-                                        
+
                                         <div className="overflow-hidden">
                                             <h3 className="font-bold text-text-main text-base">{style.name}</h3>
                                             <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1.5 font-medium mt-0.5 truncate">
@@ -322,9 +354,9 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
                                         </div>
                                     </div>
 
-                                    <button 
-                                        onClick={() => requestDisconnect(account.id)} 
-                                        disabled={isLoading} 
+                                    <button
+                                        onClick={() => requestDisconnect(account.id)}
+                                        disabled={isLoading}
                                         className="w-full sm:w-auto px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg font-medium transition-colors border border-border-base hover:border-red-200 dark:hover:border-red-900 whitespace-nowrap bg-bg-canvas"
                                     >
                                         Desvincular
@@ -339,12 +371,12 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
             {/* SECCIÓN 2: VINCULAR NUEVA */}
             <div className="pt-6 border-t border-border-base">
                 <h3 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2">
-                    <Plus size={20} className="text-brand-primary"/> Vincular nueva cuenta
+                    <Plus size={20} className="text-brand-primary" /> Vincular nueva cuenta
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Botón Google */}
-                    <button 
+                    <button
                         onClick={() => connectProvider('google')}
                         className="flex items-center gap-4 p-4 rounded-xl border border-border-base bg-bg-surface hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-all group text-left shadow-sm"
                     >
@@ -356,7 +388,7 @@ const EmailSettingsView = ({ hook }: ViewProps) => {
                     </button>
 
                     {/* Botón Outlook */}
-                    <button 
+                    <button
                         onClick={() => connectProvider('outlook')}
                         className="flex items-center gap-4 p-4 rounded-xl border border-border-base bg-bg-surface hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all group text-left shadow-sm"
                     >

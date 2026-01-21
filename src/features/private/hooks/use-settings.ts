@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../../../services/auth.services';
 import { httpClient } from '../../../utils/http-client';
 import { type User } from '../../../types/auth.types';
@@ -15,6 +15,7 @@ export interface ConnectedAccount {
 
 export const useSettings = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
 
     // Datos
@@ -39,7 +40,30 @@ export const useSettings = () => {
     // Cargar datos
     useEffect(() => {
         loadSettings();
-    }, []);
+
+        // Chequear si volvemos de una vinculación exitosa
+        const status = searchParams.get('status');
+        const message = searchParams.get('message');
+
+        if (status === 'linked_success') {
+            setStatusModal({
+                isOpen: true,
+                type: 'success',
+                title: 'Cuenta Vinculada',
+                description: 'Se ha conectado exitosamente la nueva cuenta.'
+            });
+            // Limpiar URL
+            window.history.replaceState({}, '', '/settings#email');
+        } else if (status === 'error') {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Error de Vinculación',
+                description: message || 'No se pudo conectar la cuenta.'
+            });
+            window.history.replaceState({}, '', '/settings#email');
+        }
+    }, [searchParams]);
 
     const loadSettings = async () => {
         try {
@@ -114,10 +138,30 @@ export const useSettings = () => {
     };
 
     // --- PROVIDERS ---
-    const connectProvider = (provider: 'google' | 'outlook') => {
-        window.location.href = `http://127.0.0.1:8000/auth/${provider}/redirect`;
-    };
+    const connectProvider = async (providerName: 'google' | 'outlook') => {
+        setIsLoading(true);
+        try {
+            // Mapeamos el nombre al ID que espera el backend (según tu DB)
+            // Asumo 1=Google, 2=Outlook. Ajusta si en tu DB es diferente.
+            const providerId = providerName === 'google' ? 1 : 2;
 
+            const response = await httpClient.get<{ url: string }>(`/auth/social/redirect?provider_id=${providerId}&origin=settings#email`);
+
+            if (response.url) {
+                window.location.href = response.url;
+            }
+        } catch (error) {
+            console.error("Error obteniendo URL de redirección", error);
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Error de conexión',
+                description: 'No se pudo iniciar la vinculación con el proveedor.'
+            });
+            setIsLoading(false);
+        }
+        
+    };
     const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
     const [accountToDisconnect, setAccountToDisconnect] = useState<number | null>(null);
 
@@ -140,10 +184,10 @@ export const useSettings = () => {
         try {
             // Llamada al backend con el ID único
             await httpClient.delete(`/settings/provider/${accountToDisconnect}`);
-            
+
             // Actualizamos la lista localmente
             setConnectedAccounts(prev => prev.filter(acc => acc.id !== accountToDisconnect));
-            
+
             // Mensaje de éxito
             setStatusModal({
                 isOpen: true,
@@ -201,7 +245,7 @@ export const useSettings = () => {
         setIsLoading(true);
         try {
             await httpClient.put('/settings/account', {
-                password: deletePassword 
+                password: deletePassword
             });
 
             authService.logout();
@@ -227,7 +271,7 @@ export const useSettings = () => {
         passwordForm, handlePasswordChange, updatePassword,
         connectProvider, isDisconnectModalOpen,
         closeDisconnectModal,
-        requestDisconnect, 
+        requestDisconnect,
         confirmDisconnect,
         isLogoutModalOpen, isLoggingOut, handleLogoutClick, closeLogoutModal, confirmLogout,
         deletePassword, setDeletePassword, isDeleteModalOpen, setIsDeleteModalOpen, requestDeleteAccount, executeDeleteAccount,
