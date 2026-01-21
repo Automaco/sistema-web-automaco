@@ -5,6 +5,9 @@ import { authService } from '../../../services/auth.services';
 import { httpClient } from '../../../utils/http-client';
 import { type User } from '../../../types/auth.types';
 import { type ModalType } from '../../../components/ui/status-modal';
+import { RiSpectrumFill } from 'react-icons/ri';
+
+
 
 export interface ConnectedAccount {
     id: number;
@@ -36,6 +39,20 @@ export const useSettings = () => {
     const [profileForm, setProfileForm] = useState({ name: '', email: '' });
     const [passwordForm, setPasswordForm] = useState({ current_password: '', password: '', password_confirmation: '' });
     const [errors, setErrors] = useState<any>({});
+
+    // Funcion para validar los parametros de la contraseña
+    const checkPasswordStrength = (password: string): boolean => {
+        const minLength = password.length >= 8;
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+        //Retorna TRUE si cumple todo
+        return minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+    };
+
+    // Verificacion de password
+    const isPasswordSecure = checkPasswordStrength(passwordForm.password);
 
     // Cargar datos
     useEffect(() => {
@@ -119,6 +136,13 @@ export const useSettings = () => {
             setErrors({ password_confirmation: 'Las contraseñas no coinciden' });
             return;
         }
+        // Validacion 2
+        if (!isPasswordSecure) {
+            setErrors({
+                password: 'La contraseña no cumple los requisitos'
+            });
+            return;
+        }
         setIsLoading(true);
         setErrors({});
         try {
@@ -160,7 +184,7 @@ export const useSettings = () => {
             });
             setIsLoading(false);
         }
-        
+
     };
     const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
     const [accountToDisconnect, setAccountToDisconnect] = useState<number | null>(null);

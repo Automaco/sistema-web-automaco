@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react'; // Importamos el icono para el input general
 // Importamos ambos inputs
-import { Input, PasswordInput, Button, StatusModal } from '../../../components/index';
+import { Input, PasswordInput, Button, StatusModal, PasswordRequirements } from '../../../components/index';
 import { useRegister } from '../hooks/use-register';
 
 
@@ -15,7 +15,7 @@ export const RegisterPage = () => {
         handleSubmit,
         clearErrors, // Modal de errores
         IsSuccess,// Modal de confirmacion
-        resetSuccess // Reseteo de modal
+        resetSuccess, // Reseteo de modal
     } = useRegister();
 
 
@@ -44,7 +44,7 @@ export const RegisterPage = () => {
                 title="¡Cuenta Creada"
                 description={IsSuccess}
                 buttonText="Iniciar sesión"
-            />    
+            />
 
             {/* SECCIÓN IZQUIERDA: Promoción */}
             {/* Esta sección mantiene sus colores fijos (blanco sobre verde) */}
@@ -80,7 +80,7 @@ export const RegisterPage = () => {
                         </h1>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 items-center">
+                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 items-center">
                         {/* 1. INPUT GENERAL (Con icono opcional) */}
                         <Input
                             label="Nombre de la institución"
@@ -123,8 +123,11 @@ export const RegisterPage = () => {
                             onChange={handleInputChange}
                             error={errors.confirmPassword}
                         />
-
-                        <Button type="submit" className="mt-4" disabled={isLoading} >
+                        {/* Requerimientos de contraseña */}
+                        {formData.password.length > 0 && (
+                            <PasswordRequirements password={formData.password} />
+                        )}
+                        <Button type="submit" className="mt-4" disabled={isLoading  } >
                             {isLoading ? 'Registrando...' : 'Registrar'}
                         </Button>
                     </form>

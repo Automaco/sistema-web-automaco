@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 // Importamos ambos inputs
-import { PasswordInput, Button, StatusModal } from '../../../components/index';
+import { PasswordInput, Button, StatusModal, PasswordRequirements } from '../../../components/index';
 import { useResetPassword } from '../hooks/use-reset-password';
 
 export const ResetPasswordPage = () => {
@@ -84,6 +84,11 @@ export const ResetPasswordPage = () => {
                         onChange={handleInputChange}
                         error={errors.confirmPassword}
                     />
+                    {/* Requerimientos de contraseña */}
+
+                    {formData.password.length > 0 && (
+                        <PasswordRequirements password={formData.password} />
+                    )}
 
                     <Button type="submit" className="mt-4 w-full h-12 text-lg" disabled={isLoading}>
                         {isLoading ? 'Restableciendo...' : 'Restablecer contraseña'}

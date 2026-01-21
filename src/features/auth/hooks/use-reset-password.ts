@@ -25,6 +25,21 @@ export const useResetPassword = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [IsSuccess, setIsSuccess] = useState(false);
 
+    // Funcion para validar los parametros de la contraseña
+    const checkPasswordStrength = (password: string): boolean => {
+        const minLength = password.length >= 8;
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+       const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+        //Retorna TRUE si cumple todo
+        return minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+    };
+    // Verificacion de password
+    const isPasswordSecure = checkPasswordStrength(formData.password);
+
+
+
     // Validacion si el link es valido
     const isValidLink = !!token && !!email;
 
@@ -54,7 +69,10 @@ export const useResetPassword = () => {
             newErrors.password = "La contraseña es obligatoria";
         } else if (formData.password.length < 8) {
             newErrors.password = "La contraseña debe tener al menos 8 caracteres";
+        } else if (!isPasswordSecure) {
+            newErrors.password = "La contraseña no cumple los requisitos";
         }
+
 
         //Validar Confirmación de Contraseña (Coincidencia)
         if (!formData.confirmPassword) {
@@ -115,6 +133,7 @@ export const useResetPassword = () => {
         handleSubmit,
         closeSuccessModal,
         isValidLink,
-        clearErrors
+        clearErrors,
+        isPasswordSecure
     };
 };

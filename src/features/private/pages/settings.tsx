@@ -7,6 +7,7 @@ import { useSettings } from '../hooks/use-settings';
 import { ConfirmationModal } from '../../../components/ui/confirmation-modal';
 import { useTheme } from '../../../context/theme-context';
 import { StatusModal } from '../../../components/ui/status-modal';
+import { PasswordRequirements } from '../../../components';
 
 type SectionType = 'profile' | 'password' | 'email' | 'delete';
 
@@ -246,7 +247,11 @@ const ChangePasswordView = ({ hook }: ViewProps) => {
                     <PasswordInput label="Nueva Contraseña" name="password" value={passwordForm.password} onChange={handlePasswordChange} error={errors.password} />
                     <PasswordInput label="Confirmar Nueva" name="password_confirmation" value={passwordForm.password_confirmation} onChange={handlePasswordChange} error={errors.password_confirmation} />
                 </div>
+                {/* Requerimientos de contraseña */}
 
+                {passwordForm.password.length > 0 && (
+                    <PasswordRequirements password={passwordForm.password} />
+                )}
                 <div className="flex justify-end pt-2">
                     <Button type="submit" className="w-full sm:w-auto px-8" disabled={isLoading}>
                         {isLoading ? <Loader2 className="animate-spin" /> : 'Actualizar Contraseña'}
