@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react'; 
 import { invoicesService } from '../../../services/invoices.service';
 import { type ClientGroup } from '../../../types/invoice.types';
 import { type ModalType } from '../../../components/ui/status-modal';
@@ -43,26 +43,38 @@ export const useDteSelection = () => {
 
     const closeStatusModal = () => setStatusModal(prev => ({ ...prev, isOpen: false }));
 
-    // 1. Load Data
-    useEffect(() => {
-        const load = async () => {
-            setIsLoading(true);
+    const refreshData = useCallback(async () => {
+        setIsLoading(true);
+        // Opcional: Limpiar selección al recargar para evitar errores de IDs que ya no existan
+        setSelectedFiles([]); 
+        
+        try {
             const grouped = await invoicesService.fetchAll();
             setData(grouped);
 
-            // Expand first client and their first year by default
+            // Expandir lógica inicial (solo si es la primera carga o si quieres resetear vista)
             if (grouped.length > 0) {
                 const firstClient = grouped[0];
                 const idsToExpand = [firstClient.id];
                 if (firstClient.years.length > 0) {
                     idsToExpand.push(firstClient.years[0].id);
                 }
-                setExpandedItems(idsToExpand);
+                // Nota: Si quieres mantener los acordeones abiertos al recargar, 
+                // comenta la siguiente línea o añade lógica extra.
+                setExpandedItems(idsToExpand); 
             }
+        } catch (error) {
+            console.error("Error al recargar:", error);
+            // Aquí podrías setear un error en el modal si quisieras
+        } finally {
             setIsLoading(false);
-        };
-        load();
+        }
     }, []);
+
+    // 1. Load Data
+    useEffect(() => {
+        refreshData();
+    }, [refreshData]);
 
     // --- LÓGICA DE FILTRADO  ---
     const filteredData = useMemo(() => {
@@ -318,6 +330,7 @@ export const useDteSelection = () => {
         closeStatusModal,
         filters, 
         handleFilterChange,
-        clearFilters
+        clearFilters,
+        refreshData,
     };
 };

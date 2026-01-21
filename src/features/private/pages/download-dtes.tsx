@@ -1,4 +1,4 @@
-import { Download, ChevronDown, ChevronRight, FileText, Check, X, Calendar, Loader2, User, Folder } from 'lucide-react';
+import { Download, ChevronDown, ChevronRight, FileText, Check, X, Calendar, Loader2, User, Folder, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/button';
 import { useDteSelection } from '../hooks/use-dte-selection';
 import { DteHeader, DteFilters, CheckboxIcon } from '../components/index';
@@ -15,7 +15,7 @@ export const DownloadDTEsPage = () => {
         isClientSelected, isYearSelected, isMonthSelected,
         downloadFormat, setDownloadFormat, handleDownloadSelected, isDownloading,
         statusModal, closeStatusModal, filters,
-        handleFilterChange, clearFilters
+        handleFilterChange, clearFilters, refreshData
     } = useDteSelection();
 
     if (isLoading) {
@@ -27,9 +27,9 @@ export const DownloadDTEsPage = () => {
             <div className="bg-bg-surface rounded-2xl shadow-lg border border-border-base p-6 lg:p-8 flex-1 flex flex-col overflow-hidden max-w-[1400px] mx-auto w-full">
 
                 <DteHeader />
-                <DteFilters 
-                    filters={filters} 
-                    onFilterChange={handleFilterChange} 
+                <DteFilters
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
                     onClearFilters={clearFilters}
                 />
 
@@ -41,6 +41,19 @@ export const DownloadDTEsPage = () => {
                             : `${totalFilesCount} archivos encontrados`
                         }
                     </div>
+
+                    <button
+                        onClick={refreshData}
+                        disabled={isLoading}
+                        className="text-sm font-semibold flex items-center gap-2 text-text-muted hover:text-brand-primary transition-colors disabled:opacity-50"
+                        title="Recargar lista"
+                    >
+                        <RefreshCw
+                            size={16}
+                            className={isLoading ? "animate-spin" : ""}
+                        />
+                        <span className="hidden sm:inline">Recargar</span>
+                    </button>
 
                     <button
                         onClick={toggleSelectAll}
@@ -58,7 +71,7 @@ export const DownloadDTEsPage = () => {
 
                     {data.map((client) => (
                         <div key={client.id} className="border border-border-base rounded-xl overflow-hidden bg-bg-surface shadow-sm mb-4">
-                            
+
                             {/* === LEVEL 1: CLIENT === */}
                             <div
                                 className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition-colors select-none"
@@ -80,7 +93,7 @@ export const DownloadDTEsPage = () => {
                                 <div className="pl-4 pr-2 py-2 space-y-2 bg-bg-surface">
                                     {client.years.map((yearGroup) => (
                                         <div key={yearGroup.id} className="border-l-2 border-border-base ml-2">
-                                            
+
                                             <div
                                                 className="flex items-center gap-3 p-3 hover:bg-bg-canvas cursor-pointer select-none transition-colors rounded-r-lg"
                                                 onClick={() => toggleExpand(yearGroup.id)}
