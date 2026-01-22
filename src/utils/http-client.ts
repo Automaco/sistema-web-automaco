@@ -34,6 +34,8 @@ export const httpClient = async <T>(
 
     const token = localStorage.getItem("token");
 
+    const selectedAccountId = localStorage.getItem("selected_account_id");
+
     // Construcción de la configuración fetch
     const config: RequestInit = {
         method,
@@ -42,6 +44,7 @@ export const httpClient = async <T>(
             ...(body && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
             "Accept": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(selectedAccountId ? { "X-Account-ID": selectedAccountId } : {}),
             ...headers,
         },
     };
