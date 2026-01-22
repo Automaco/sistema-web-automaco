@@ -5,9 +5,6 @@ import { authService } from '../../../services/auth.services';
 import { httpClient } from '../../../utils/http-client';
 import { type User } from '../../../types/auth.types';
 import { type ModalType } from '../../../components/ui/status-modal';
-import { RiSpectrumFill } from 'react-icons/ri';
-
-
 
 export interface ConnectedAccount {
     id: number;
@@ -155,6 +152,12 @@ export const useSettings = () => {
             });
             setPasswordForm({ current_password: '', password: '', password_confirmation: '' });
         } catch (error: any) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Error al actualizar la contraseña',
+                description: 'Hubo un problema al actualizar tu contraseña. Revisa que has colocado todo correctamente, como tu contraseña actual.'
+            });
             setErrors(error.response?.data?.errors || {});
         } finally {
             setIsLoading(false);
