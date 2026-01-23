@@ -8,14 +8,22 @@ interface DashboardResponse {
 }
 
 export const dashboardService = {
-    getData: async (year: string) => {
+    getData: async (year: string, accountId?: number) => {
         try {
-            // Pasamos el año como query param
-            const response = await httpClient.get<DashboardResponse>(`/dashboard?year=${year}`);
+            // Construimos los parámetros URL
+            const params = new URLSearchParams();
+            params.append('year', year);
+            
+            // Solo lo enviamos si existe
+            if (accountId) {
+                params.append('account_id', accountId.toString());
+            }
+
+            // Usamos params en la petición
+            const response = await httpClient.get<DashboardResponse>(`/dashboard?${params.toString()}`);
             return response;
         } catch (error) {
             console.error("Error fetching dashboard data", error);
-            // Retornamos estructura vacía para no romper la UI
             return {
                 chartData: [],
                 recentEmails: []
