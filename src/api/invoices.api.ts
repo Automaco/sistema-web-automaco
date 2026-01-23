@@ -3,16 +3,8 @@ import { type Invoice } from '../types/invoice.types';
 
 export const invoicesApi = {
     // Obtener lista (paginada)
-    getInvoices: async (accountId?: string | number) => {
-        // Si hay un ID y no es 'all', configuramos el header
-        const config = (accountId && accountId !== 'all')
-            ? { headers: { 'X-Account-ID': accountId.toString() } }
-            : {};
-
-        return await httpClient.get<{ data: Invoice[], current_page: number, last_page: number }>(
-            `/invoices`,
-            config
-        );
+    getInvoices: async () => {
+        return await httpClient.get<{ data: Invoice[], current_page: number, last_page: number }>(`/invoices`);
     },
 
     // Descargar PDF (Blob)

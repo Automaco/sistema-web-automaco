@@ -4,11 +4,9 @@ import { formatDateForFile } from '../utils/utils';
 import JSZip from 'jszip';
 
 export const invoicesService = {
-
-    fetchAll: async (accountId?: string | number) => {
+    fetchAll: async () => {
         try {
-            // Pasamos el accountId a la API
-            const response = await invoicesApi.getInvoices(accountId);
+            const response = await invoicesApi.getInvoices();
             return groupInvoicesByClientAndDate(response.data || []);
         } catch (error) {
             console.error("Error", error);
