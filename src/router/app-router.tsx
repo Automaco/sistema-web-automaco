@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard, AutoLogout } from '../layouts/index';
+import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard, AutoLogout, ActivationGuard } from '../layouts/index';
 import {
     LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage,
     ResetPasswordPage, ActiveAccountPage
@@ -35,11 +35,16 @@ export const router = createBrowserRouter([
     },
 
     {
-        path: '/auth',
-        element: <AuthLayout />,
+        element: <ActivationGuard />, 
         children: [
-            { path: 'active-account', element: <ActiveAccountPage /> },
-        ],
+            {
+                element: <AuthLayout />,
+                path: '/auth',
+                children: [
+                    { path: 'active-account', element: <ActiveAccountPage /> },
+                ]
+            }
+        ]
     },
 
     {

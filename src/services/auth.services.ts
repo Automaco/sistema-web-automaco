@@ -1,5 +1,7 @@
 import { authApi } from '../api/auth.api';
 import type { LoginResponse, RegisterResponse, RegisterPayload, AuthMessageResponse, ResetPasswordPayload, ForgotPasswordPayload, ActivateAccountPayload, ActivateAccountResponse } from '../types/auth.types';
+import { type User } from '../types/auth.types';
+import { httpClient } from '../utils/http-client';
 
 export const authService = {
 
@@ -19,6 +21,10 @@ export const authService = {
         return response;
     },
 
+    async getMe(): Promise<User> {
+        const response = await httpClient.get<User>('/auth/me'); // O la ruta que devuelva al usuario actual
+        return response;
+    },
 
     /**
      * Realiza el register, registro de usuario

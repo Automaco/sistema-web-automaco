@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';// Importamos ambos inputs
 import { CodeInput, Button, StatusModal } from '../../../components/index'; // Input para clave
 import { useActiveAccount } from '../hooks/use-active-account';
+import { authService } from '../../../services/auth.services';
 
 
 export const ActiveAccountPage = () => {
@@ -61,16 +62,19 @@ export const ActiveAccountPage = () => {
                         placeholder="XXXX-XXXX-XXXX-XXXX"
                         value={formData.code}
                         onChange={handleInputChange}
-                        maxLength={6}
+                        maxLength={10}
                         error={errors.code}
                     />
-                    <Button type="submit" className="mt-4" disabled={isLoading || !formData.code} >
+                    <Button type="submit" className="mt-4" disabled={isLoading} >
                         {isLoading ? 'Redireccionando...' : 'Activar'}
                     </Button>
                 </form>
                 <div className="w-full text-center mt-5 mb-15">
                     <Link to="" className="text-xs text-brand-primary hover:text-brand-primary transition-colors"> {/* Logica a trabajar para solucionar problemas */}
                         ¿Tienes problemas? <span className="text-text-main font-medium hover:underline">Ponte en contacto</span>
+                    </Link> <br />
+                    <Link to="" onClick={authService.logout} className="text-xs text-brand-primary hover:text-brand-primary transition-colors "> {/* Logica a trabajar para solucionar problemas */}
+                        <span className="text-text-main font-medium hover:underline">Regresar al inicio</span>
                     </Link>
                 </div>
             </div>

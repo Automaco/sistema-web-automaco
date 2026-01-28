@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/auth.services';
 import { ApiError } from '../../../utils/http-client';
+import { PrivateGuard } from '../../../layouts';
 
 
 // Interfaz para el estado de errores
@@ -39,7 +40,7 @@ export const useActiveAccount = () => {
         const newErrors: FormErrors = {};
 
         if (!formData.code) {
-            newErrors.code = "Codigo obligatorio";
+            newErrors.code = "Campo obligatorio";
         } else if (formData.code.length < 6) {
             newErrors.code = "La clave debe tener al menos 6 caracteres";
         }
@@ -76,7 +77,6 @@ export const useActiveAccount = () => {
     // Cerramos el modal de exito y redirigimos a la ventana de dashboard
     const handleSuccessClose = () => {
         SetIsSuccess(false);
-        navigate('/dashboard');
     }
     // Cerramos el modal de error
     const clearErrors = () => {
