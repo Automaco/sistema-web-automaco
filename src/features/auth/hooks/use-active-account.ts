@@ -2,8 +2,6 @@ import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../../services/auth.services';
 import { ApiError } from '../../../utils/http-client';
-import { PrivateGuard } from '../../../layouts';
-
 
 // Interfaz para el estado de errores
 interface FormErrors {

@@ -69,8 +69,9 @@ export const ActivationGuard = () => {
     const user = getUserFromStorage();
 
     // Si ya está activo, no tiene nada que hacer aquí
+    // Lo mandamos al dashboard, esa pagina ya tiene su propio guard que manda a la seleccion de cuenta
     if (user && Boolean(user.is_active)) {
-        return <Navigate to="/accounts/select-account" replace />;
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <Outlet />;
@@ -90,15 +91,27 @@ export const PrivateGuard = () => {
     useEffect(() => {
         const verifySession = async () => {
             if (!token) {
+                console.log("GUARD: No hay token");
                 setIsChecking(false);
                 setIsAuthenticated(false);
                 return;
             }
 
             try {
-                // Sincronizamos con el backend la "verdad"
-                const realUser = await authService.getMe();
+                const response = await authService.getMe();
+                // 1. conversion
+                const data = response as any;
+
+                // Sincronizamos con el backend
+                const realUser = data.user ? data.user : data;
+                
+                //Pruebas
+                console.log("GUARD: Usuario recibido del backend:", realUser);
+                console.log("GUARD: is_active value:", realUser.is_active);
+                console.log("GUARD: is_active TYPE:", typeof realUser.is_active);
+
                 localStorage.setItem('user', JSON.stringify(realUser));
+                // Si el usuario realno esta activo, esa funcion sera false
                 setIsAuthenticated(true);
             } catch (error) {
                 // Si el token expiró o es inválido
@@ -124,7 +137,14 @@ export const PrivateGuard = () => {
 
     // Verificación final de estado activo
     const user = getUserFromStorage();
+
+    const isActive = Boolean(user?.is_active);
+
+    console.log("GUARD: Decisión Final -> User:", user?.email, "Is Active?:", isActive);
+
+    // Si no esta activo -> activa la cuenta
     if (user && !user.is_active) {
+        console.warn("GUARD: ¡Bloqueado! Redirigiendo a active-account");
         return <Navigate to="/auth/active-account" replace />;
     }
 

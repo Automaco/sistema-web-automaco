@@ -14,172 +14,77 @@ export const router = createBrowserRouter([
     },
 
     // Autenticación (Login, Registro, Recuperación)
+    // ZONA PUBLICA //
     {
         element: <PublicGuard />,
         children: [
             {
-                path: '/auth',
                 element: <AuthLayout />,
                 children: [
-                    {
-                        path: 'login',
-                        element: <LoginPage />,
-                    },
-                    { path: 'register', element: <RegisterPage /> },
-                    // Recuperacion de contraseña
-                    { path: 'recover-password', element: <RecoverPasswordPage /> },
-                    { path: 'reset-password', element: <ResetPasswordPage /> },
+                    { path: '/auth/login', element: <LoginPage /> },
+                    { path: '/auth/register', element: <RegisterPage /> },
+                    { path: '/auth/recover-password', element: <RecoverPasswordPage /> }, // Area de recuperacion
+                    { path: '/auth/reset-password', element: <ResetPasswordPage /> },
                 ],
             },
-        ]
+        ],
     },
-
+    // ZONA DE ACTIVACION // 
     {
         element: <ActivationGuard />,
         children: [
             {
                 element: <AuthLayout />,
-                path: '/auth',
                 children: [
-                    { path: 'active-account', element: <ActiveAccountPage /> },
-                ]
-            }
-        ]
+                    { path: '/auth/active-account', element: <ActiveAccountPage /> },
+                ],
+            },
+        ],
     },
-
+    // ZONA PRIVADA GLOBAL, REQUIERE LOGEARSE
     {
-        path: '/users',
-        element: (
-            <AutoLogout>
-                <PrivateGuard />
-            </AutoLogout>
-        ),
+        element: <PrivateGuard />,
         children: [
-            {
-                path: '',
-                element: <AdminGuard />,
-                children: [
-                    {
-                        path: '',
-                        element: <AccountGuard />,
-                        children: [
-                            {
-                                path: '',
-                                element: <PrivateLayout />,
-                                children: [
-                                    {
-                                        path: '',
-                                        element: <UsersPage />
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
 
-            }
-        ]
-    },
-
-    {
-        element: (
-            <AutoLogout>
-                <PrivateGuard />
-            </AutoLogout>
-        ),
-        children: [
+            // A. Selección de Cuentas (No requiere Layout Privado, pero sí Auth)
             {
                 path: '/accounts',
                 element: <AuthLayout />,
                 children: [
-                    {
-                        path: 'select-account',
-                        element: <AccountListPage />,
-                    },
-                    {
-                        path: 'select-provider',
-                        element: <SelectProviderPage />,
-                    },
+                    { path: 'select-account', element: <AccountListPage /> },
+                    { path: 'select-provider', element: <SelectProviderPage /> },
                 ],
             },
 
-            //DASHBOARD
+            // B. Rutas del Sistema (Dashboard, Users, DTEs) -> Requieren AccountGuard
             {
-                path: '/dashboard',
                 element: (
                     <AutoLogout>
-                        <PrivateGuard />
+                        <AccountGuard />
                     </AutoLogout>
                 ),
                 children: [
+                    // Todas estas rutas heredan el PrivateLayout
                     {
-                        path: '',
-                        element: <AccountGuard />,
+                        element: <PrivateLayout />,
                         children: [
-                            {
-                                path: '',
-                                element: <PrivateLayout />,
-                                children: [
-                                    {
-                                        path: '',
-                                        element: <DashboardPage />,
-                                    }
-                                ]
+                            { path: '/dashboard', element: <DashboardPage /> },
+                            { path: '/dtes', element: <DownloadDTEsPage /> },
+                            { path: '/settings', element: <SettingPage /> },
 
+                            // Zona Admin
+                            {
+                                path: '/users',
+                                element: <AdminGuard />,
+                                children: [
+                                    { path: '', element: <UsersPage /> }
+                                ]
                             }
                         ]
-                    }]
-            },
-
-            //DTES
-            {
-                path: '/dtes',
-                element: (
-                    <AutoLogout>
-                        <PrivateLayout />
-                    </AutoLogout>
-                ),
-                children: [{
-                    path: '',
-                    element: <AccountGuard />,
-                    children: [
-                        {
-                            path: '',
-                            element: <PrivateGuard />,
-                            children: [
-                                {
-                                    path: '',
-                                    element: <DownloadDTEsPage />,
-                                }
-                            ]
-                        }
-                    ]
-
-                }]
-
-            },
-            // Settings
-            {
-                path: '/settings',
-                element: <PrivateLayout />,
-                children: [
-                    {
-                        path: '',
-                        element: <PrivateGuard />,
-                        children: [{
-                            path: '',
-                            element: <AccountGuard />,
-                            children: [
-                                {
-                                    path: '',
-                                    element: <SettingPage />,
-                                }
-                            ]
-                        }]
                     }
                 ]
             }
-        ]
+        ],
     },
 
     // Manejo de Errores (404)
