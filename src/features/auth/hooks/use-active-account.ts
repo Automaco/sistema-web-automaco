@@ -74,10 +74,14 @@ export const useActiveAccount = () => {
         }
     };
 
-    // Cerramos el modal de exito y redirigimos a la ventana de dashboard
+    // Cerramos el modal de éxito y redirigimos
     const handleSuccessClose = () => {
         SetIsSuccess(false);
+        // IMPORTANTE: Redirigimos explícitamente a la selección de cuentas.
+        // Como el localStorage ya dice "is_active: true", el ActivationGuard dejará salir al usuario.
+        navigate('/accounts/select-account', { replace: true });
     }
+    
     // Cerramos el modal de error
     const clearErrors = () => {
         setErrors({});

@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard, AutoLogout, ActivationGuard } from '../layouts/index';
+import { AuthLayout, PrivateLayout, PrivateGuard, PublicGuard, AdminGuard, AutoLogout, ActivationGuard, AccountGuard } from '../layouts/index';
 import {
     LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage,
     ResetPasswordPage, ActiveAccountPage
@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
     },
 
     {
-        element: <ActivationGuard />, 
+        element: <ActivationGuard />,
         children: [
             {
                 element: <AuthLayout />,
@@ -61,15 +61,22 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         path: '',
-                        element: <PrivateLayout />,
+                        element: <AccountGuard />,
                         children: [
                             {
                                 path: '',
-                                element: <UsersPage />
+                                element: <PrivateLayout />,
+                                children: [
+                                    {
+                                        path: '',
+                                        element: <UsersPage />
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
+
             }
         ]
     },
@@ -107,17 +114,21 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         path: '',
-                        element: <PrivateLayout />,
+                        element: <AccountGuard />,
                         children: [
                             {
                                 path: '',
-                                element: <DashboardPage />,
+                                element: <PrivateLayout />,
+                                children: [
+                                    {
+                                        path: '',
+                                        element: <DashboardPage />,
+                                    }
+                                ]
+
                             }
                         ]
-
-                    }
-                ]
-
+                    }]
             },
 
             //DTES
@@ -128,18 +139,23 @@ export const router = createBrowserRouter([
                         <PrivateLayout />
                     </AutoLogout>
                 ),
-                children: [
-                    {
-                        path: '',
-                        element: <PrivateGuard />,
-                        children: [
-                            {
-                                path: '',
-                                element: <DownloadDTEsPage />,
-                            }
-                        ]
-                    }
-                ]
+                children: [{
+                    path: '',
+                    element: <AccountGuard />,
+                    children: [
+                        {
+                            path: '',
+                            element: <PrivateGuard />,
+                            children: [
+                                {
+                                    path: '',
+                                    element: <DownloadDTEsPage />,
+                                }
+                            ]
+                        }
+                    ]
+
+                }]
 
             },
             // Settings
@@ -150,12 +166,16 @@ export const router = createBrowserRouter([
                     {
                         path: '',
                         element: <PrivateGuard />,
-                        children: [
-                            {
-                                path: '',
-                                element: <SettingPage />,
-                            }
-                        ]
+                        children: [{
+                            path: '',
+                            element: <AccountGuard />,
+                            children: [
+                                {
+                                    path: '',
+                                    element: <SettingPage />,
+                                }
+                            ]
+                        }]
                     }
                 ]
             }

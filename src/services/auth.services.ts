@@ -22,7 +22,12 @@ export const authService = {
     },
 
     async getMe(): Promise<User> {
-        const response = await httpClient.get<User>('/auth/me'); // O la ruta que devuelva al usuario actual
+        const response = await httpClient.get<User>('/auth/me');
+
+        if (response) {
+            localStorage.setItem('user', JSON.stringify(response));
+        }
+
         return response;
     },
 
@@ -82,8 +87,14 @@ export const authService = {
      * Activacion de cuenta
      */
     activationAccount: async (payload: ActivateAccountPayload): Promise<ActivateAccountResponse> => {
-        // Se ejecuta la peticion
+        // 1. Petición al Backend
         const response = await authApi.activationAccount(payload);
+
+        // 2. ACTUALIZACIÓN SEGURA:
+        // Como el backend nos devuelve 'user' con is_active = true, lo guardamos directo.
+        if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+        }
 
         return response;
     },
