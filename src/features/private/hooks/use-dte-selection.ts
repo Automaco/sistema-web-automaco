@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'; 
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { invoicesService } from '../../../services/invoices.service';
 import { type ClientGroup } from '../../../types/invoice.types';
 import { type ModalType } from '../../../components/ui/status-modal';
+import { N8nService } from '../../../services/n8n.services';
 
 export const useDteSelection = () => {
     const [data, setData] = useState<ClientGroup[]>([]);
@@ -46,9 +47,24 @@ export const useDteSelection = () => {
     const refreshData = useCallback(async () => {
         setIsLoading(true);
         // Opcional: Limpiar selección al recargar para evitar errores de IDs que ya no existan
-        setSelectedFiles([]); 
-        
+        setSelectedFiles([]);
+
         try {
+
+            const userStr = localStorage.getItem('user');
+            const accountStr = localStorage.getItem('selected_account');
+
+            if (userStr && accountStr) {
+                const user = JSON.parse(userStr);
+                const account = JSON.parse(accountStr);
+
+                // Ejecutamos el trigger antes de pedir los correos
+                await N8nService.triggerWorkflow({
+                    user_id: user.id,
+                    email_provider_id: account.email_provider_id
+                });
+            }
+
             const grouped = await invoicesService.fetchAll();
             setData(grouped);
 
@@ -61,7 +77,7 @@ export const useDteSelection = () => {
                 }
                 // Nota: Si quieres mantener los acordeones abiertos al recargar, 
                 // comenta la siguiente línea o añade lógica extra.
-                setExpandedItems(idsToExpand); 
+                setExpandedItems(idsToExpand);
             }
         } catch (error) {
             console.error("Error al recargar:", error);
@@ -125,7 +141,7 @@ export const useDteSelection = () => {
 
     }, [data, filters]);
 
-    const currentData = filteredData; 
+    const currentData = filteredData;
 
     // --- SELECTION LOGIC HELPERS ---
 
@@ -187,7 +203,7 @@ export const useDteSelection = () => {
     // toggleSelectAll ahora usa allFileIds filtrados
     const toggleSelectAll = () => {
         if (isAllSelected) {
-            setSelectedFiles([]); 
+            setSelectedFiles([]);
         } else {
             // Selecciona SOLO lo que se ve en pantalla (filtrado)
             setSelectedFiles(allFileIds);
@@ -328,7 +344,7 @@ export const useDteSelection = () => {
         isDownloading,
         statusModal,
         closeStatusModal,
-        filters, 
+        filters,
         handleFilterChange,
         clearFilters,
         refreshData,
