@@ -58,6 +58,7 @@ export const useDteSelection = () => {
                 const user = JSON.parse(userStr);
                 const account = JSON.parse(accountStr);
 
+
                 // Ejecutamos el trigger antes de pedir los correos
                 await N8nService.triggerWorkflow({
                     user_id: user.id,

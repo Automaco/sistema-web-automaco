@@ -133,7 +133,7 @@ export const useSettings = () => {
             setErrors({ password_confirmation: 'Las contraseñas no coinciden' });
             return;
         }
-        if (passwordForm.current_password != passwordForm.password) {
+        if (passwordForm.current_password === passwordForm.password) {
             setErrors({ password: 'La contraseña actual coinciden con la nueva contraseña' });
             return;
         }
@@ -160,7 +160,7 @@ export const useSettings = () => {
                 isOpen: true,
                 type: 'error',
                 title: 'Error al actualizar la contraseña',
-                description: 'Hubo un problema al actualizar tu contraseña. Revisa que has colocado todo correctamente, como tu contraseña actual.'
+                description: 'Verifica que todos los campos sean los correctos'
             });
             setErrors(error.response?.data?.errors || {});
         } finally {
