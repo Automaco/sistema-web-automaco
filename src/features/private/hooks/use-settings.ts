@@ -133,6 +133,10 @@ export const useSettings = () => {
             setErrors({ password_confirmation: 'Las contraseñas no coinciden' });
             return;
         }
+        if (passwordForm.current_password != passwordForm.password) {
+            setErrors({ password: 'La contraseña actual coinciden con la nueva contraseña' });
+            return;
+        }
         // Validacion 2
         if (!isPasswordSecure) {
             setErrors({

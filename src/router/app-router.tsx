@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
                 children: [
                     { path: '/auth/login', element: <LoginPage /> },
                     { path: '/auth/register', element: <RegisterPage /> },
-                    { path: '/auth/recover-password', element: <RecoverPasswordPage /> }, // Area de recuperacion
+                    { path: '/auth/recover-password', element: <RecoverPasswordPage /> },
                     { path: '/auth/reset-password', element: <ResetPasswordPage /> },
                 ],
             },

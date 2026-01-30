@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { type User } from '../types/auth.types';
 import { authService } from '../services/auth.services';
@@ -28,7 +28,6 @@ const hasSelectedAccount = () => {
     return !!accountStr && !!accountId;
 };
 
-
 // --- GUARDS ---
 
 /**
@@ -36,6 +35,17 @@ const hasSelectedAccount = () => {
  * - Si YA está autenticado, lo manda a donde corresponda según su estado.
  */
 export const PublicGuard = () => {
+    const location = useLocation(); // Obtenemos la ruta actual
+
+    // Definimos las rutas que son "inmunes" a la redirección
+    const whitelist = ['/auth/recover-password', '/auth/reset-password'];
+
+    // Si la ruta actual está en la lista blanca, dejamos pasar directamente
+    if (whitelist.includes(location.pathname)) {
+        return <Outlet />;
+    }
+
+    // --- LÓGICA ESTÁNDAR 
     if (hasToken()) {
         const user = getUserFromStorage();
 
@@ -52,9 +62,9 @@ export const PublicGuard = () => {
         // 3. Si todo está ok -> Dashboard
         return <Navigate to="/dashboard" replace />;
     }
+
     return <Outlet />;
 };
-
 
 /**
  * GUARDIA DE ACTIVACIÓN (Específico para /auth/active-account)
