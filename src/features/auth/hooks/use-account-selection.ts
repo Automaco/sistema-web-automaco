@@ -69,6 +69,7 @@ export const useAccountSelection = () => {
                     email_provider_id: account.email_provider_id
                 });
                 console.log("Flujo de n8n iniciado correctamente");
+                navigate('/dashboard');
                 setSuccess(true);
             } catch (error: any) {
                 // Aquí podrías manejar el error, por ejemplo, mostrando una notificación
@@ -83,10 +84,6 @@ export const useAccountSelection = () => {
         setIsLoading(false);
     };
 
-    const CloseSuccesModal = () => {
-        setSuccess(false);
-        navigate('/dashboard');
-    };
     const handleAddAccount = () => {
         navigate('/accounts/select-provider');
     };
@@ -101,7 +98,6 @@ export const useAccountSelection = () => {
         clearErrors,
         handleSelectAccount,
         IsSuccess,
-        CloseSuccesModal,
         handleAddAccount
     };
 };
