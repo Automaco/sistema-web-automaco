@@ -117,7 +117,7 @@ export const ResetPasswordPage = () => {
                 isOpen={!!errors.general}
                 onClose={clearErrors}
                 type='error'
-                title='Enlace no valido'
+                title='¡Cuidado!'
                 description={errors.general}
                 buttonText='Intentar de nuevo'
             />

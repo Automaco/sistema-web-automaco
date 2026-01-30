@@ -30,8 +30,6 @@ export const AccountListPage = () => {
         errors,
         clearErrors,
         handleSelectAccount,
-        IsSuccess,
-        CloseSuccesModal,
         handleAddAccount } = useAccountSelection();
 
     if (isLoading) {
@@ -44,17 +42,6 @@ export const AccountListPage = () => {
 
     return (
         <div className="w-full max-w-5xl flex flex-col justify-center items-center p-8 sm:p-12 lg:p-16 min-h-[80vh]">
-            {/**
-        * Estados de modal: Exito
-        */}
-            <StatusModal
-                isOpen={!!IsSuccess}
-                onClose={CloseSuccesModal}
-                type='success'
-                title='!Exito¡'
-                description='Tus archivos se muestraran pronto'
-                buttonText='Ir'
-            />
             {/**
         * Estados de modal: Falso
         */}
