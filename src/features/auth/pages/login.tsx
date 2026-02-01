@@ -26,7 +26,7 @@ export const LoginPage = () => {
                 isOpen={!!errors.general} // Convierte el string a boolean
                 onClose={clearErrors}
                 type="error"
-                title="Error de inicio de sesión"
+                title="Error al iniciar sesión"
                 description={errors.general}
                 buttonText="Intentar de nuevo"
             />

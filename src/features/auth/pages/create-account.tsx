@@ -135,7 +135,7 @@ export const RegisterPage = () => {
                     {/* Footer Móvil */}
                     <div className="mt-6 text-sm text-text-muted lg:hidden">
                         <p>
-                            ¿No tienes cuenta? <Link to="/auth/register" className="text-text-main font-bold hover:underline hover:text-brand-primary ml-1">Crea tu cuenta</Link>
+                            ¿Ya tienes cuenta? <Link to="/auth/login" className="text-text-main font-bold hover:underline hover:text-brand-primary ml-1">Iniciar sesión</Link>
                         </p>
                     </div>
                 </div>

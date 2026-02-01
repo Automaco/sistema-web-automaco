@@ -56,23 +56,28 @@ export const httpClient = async <T>(
 
     try {
         const res = await fetch(`${BASE_URL}${endpoint}`, config);
-
+        // manejo de errores: correccion
         if (!res.ok) {
-            if (res.status === 401) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                window.location.href = "/auth/login";
-                throw new ApiError(401, null, "Sesión expirada");
-            }
-
+            // parseamos el error
             let errorData;
             try {
                 errorData = await res.json();
             } catch {
-                errorData = { message: "Error desconocido" };
+                errorData = { message: res.statusText || "Error desconocido" };
+            }
+            const isLoginRequest = endpoint.includes('login');
+
+            if (res.status === 401 && !isLoginRequest) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+
+                // Opcional: Solo redirigir si no estamos ya en login
+                if (window.location.pathname !== '/auth/login') {
+                    window.location.href = "/auth/login";
+                }
             }
 
-            const errorMessage = errorData.message || errorData.error || res.statusText;
+            const errorMessage = errorData.message || errorData.error || res.statusText || "Error desconocido";
             throw new ApiError(res.status, errorData, errorMessage);
         }
 

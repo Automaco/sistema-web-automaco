@@ -59,29 +59,31 @@ export const useLogin = () => {
                 navigate('/accounts/select-account');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Login failed', error);
+            
             let errorMessage = "Ocurrió un error inesperado";
 
-            // Verificamos si es un Error real antes de usarlo
-            if (error instanceof Error) {
-                try {
-                    // Intentamos leer el JSON del error si viene del httpClient
-                    const parsed = JSON.parse(error.message);
+            // 1. Verificar si es un error de respuesta del Servidor (Axios)
+            if (error.response) {
+                const status = error.response.status;
+                const data = error.response.data;
 
-                    errorMessage = parsed.message;
-
-                } catch {
-                    // Mensaje por defecto si no es JSON
-                    errorMessage = "Error de conexión";
+                // Caso específico: Credenciales Incorrectas
+                if (status === 401 || status === 422) {
+                    errorMessage = "Correo o contraseña incorrectos.";
+                } 
+                // Si el backend envía un mensaje específico
+                else if (data && data.message) {
+                    errorMessage = data.message;
                 }
+            } 
+            // 2. Errores de red o de código (sin respuesta del servidor)
+            else if (error instanceof Error) {
+                errorMessage = error.message; 
             }
 
-            // credenciales incorrectas (401)
-            if (errorMessage.includes('Credenciales inválidas') || errorMessage.includes('Unauthorized')) {
-                errorMessage = 'Correo o contraseña incorrectos.';
-            }
-
+            // Seteamos el error para que aparezca el MODAL
             setErrors({ general: errorMessage });
         } finally {
             setIsLoading(false);
