@@ -4,7 +4,7 @@ import {
     LoginPage, AccountListPage, SelectProviderPage, RegisterPage, RecoverPasswordPage,
     ResetPasswordPage, ActiveAccountPage
 } from '../features/auth/pages/index';
-import { DownloadDTEsPage, DashboardPage, SettingPage, UsersPage } from '../features/private/pages/index';
+import { DownloadDTEsPage, DashboardPage, SettingPage, UsersPage, ActivationCodesPage } from '../features/private/pages/index';
 import { NotFoundPage } from '../features/404';
 
 export const router = createBrowserRouter([
@@ -78,6 +78,13 @@ export const router = createBrowserRouter([
                                 element: <AdminGuard />,
                                 children: [
                                     { path: '', element: <UsersPage /> }
+                                ]
+                            },
+                            {
+                                path: '/activation-codes',
+                                element: <AdminGuard />,
+                                children: [
+                                    { path: '', element: <ActivationCodesPage /> }
                                 ]
                             }
                         ]

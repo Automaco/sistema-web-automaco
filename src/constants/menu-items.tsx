@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { LayoutDashboard, FileText, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, Users, Key } from 'lucide-react';
 
 // Definimos los roles posibles
 export type UserRole = 'admin' | 'accountant';
@@ -8,8 +8,8 @@ export interface MenuItem {
     label: string;
     path: string;
     icon: ReactNode;
-    roles?: UserRole[]; // Si es undefined, es público para todos los logueados
-    bottom?: boolean;   // Si true, se va al fondo (como logout o settings)
+    roles?: UserRole[]; 
+    bottom?: boolean;   
 }
 
 export const MENU_ITEMS: MenuItem[] = [
@@ -28,9 +28,16 @@ export const MENU_ITEMS: MenuItem[] = [
         label: 'Usuarios',
         path: '/users',
         icon: <Users size={22} />,
-        roles: ['admin'], // Solo admin
+        roles: ['admin'],
     },
 
+{
+        label: 'Generar códigos',
+        path: '/activation-codes',
+        icon: <Key size={22} />,
+        roles: ['admin'], 
+    },
+    
     // --- SECCIÓN INFERIOR (Bottom) ---
     {
         label: 'Configuración',
