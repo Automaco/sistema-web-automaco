@@ -1,6 +1,7 @@
 import { invoicesApi } from '../api/invoices.api';
 import { type Invoice, type DteFile, type ClientGroup, } from '../types/invoice.types';
 import { formatDateForFile } from '../utils/utils';
+import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 
 export const invoicesService = {
@@ -42,75 +43,66 @@ export const invoicesService = {
     downloadAsZip: async (files: DteFile[], format: 'pdf' | 'json' | 'both', structure: 'organized' | 'flat') => {
         const zip = new JSZip();
         
-        // Nombramos la carpeta raíz dependiendo del modo
-        const rootFolderName = structure === 'organized' ? "Facturas_Organizadas" : "Facturas_Unificadas";
-        const rootFolder = zip.folder(rootFolderName);
+        // Creamos la carpeta raíz del ZIP
+        const rootName = structure === 'organized' ? "DTEs_Organizados" : "DTEs_Unificados";
+        const rootFolder = zip.folder(rootName);
 
         if (!rootFolder) return;
 
         const promises = files.map(async (file) => {
             try {
-                // Definimos dónde se guardará el archivo dentro del ZIP
                 let targetFolder = rootFolder;
-                let fileNamePrefix = "";
+                let finalFileName = file.name; // Nombre base
 
                 if (structure === 'organized') {
-                    // Asumiendo formato dd/mm/yyyy
-                    const parts = file.date.split('/'); 
-                    // parts[0] = dia, parts[1] = mes, parts[2] = año
-                    const monthStr = parts[1]; 
-                    const yearStr = parts[2];
+                    // --- MODO ORGANIZADO: Crear jerarquía de carpetas ---
+                    const [, month, year] = file.date.split('/');
+                    const monthName = getMonthName(parseInt(month));
+
+                    // Navegamos: Cliente -> Año -> Mes
+                    targetFolder = rootFolder
+                        .folder(file.clientName)!
+                        .folder(year)!
+                        .folder(monthName)!;
                     
-                    const monthName = getMonthName(parseInt(monthStr));
-
-                    // Creamos la jerarquía
-                    const clientFolder = rootFolder.folder(file.clientName);
-                    const yearFolder = clientFolder?.folder(yearStr);
-                    const monthFolder = yearFolder?.folder(monthName);
-
-                    if (monthFolder) {
-                        targetFolder = monthFolder;
-                    }
-                    // En modo organizado, el nombre del archivo se mantiene limpio
-                    fileNamePrefix = ""; 
+                    // El nombre del archivo se mantiene original
+                    finalFileName = file.name;
 
                 } else {
-                    fileNamePrefix = `[${file.clientName}] `;
+                    // --- MODO MEZCLADO (FLAT): Todo en la raíz ---
+                    // No cambiamos targetFolder (se queda en rootFolder)
+                    
+                    // IMPORTANTE: Modificamos el nombre para incluir al cliente y evitar sobrescritura
+                    // Ejemplo: "[Juan Perez] DTE-123"
+                    finalFileName = `[${file.clientName}] ${file.name}`;
                 }
 
-                // --- DESCARGA DE BLOBS ---
+                // --- DESCARGAR Y AGREGAR AL ZIP ---
+                
+                // 1. PDF
                 if (format === 'pdf' || format === 'both') {
                     const pdfBlob = await invoicesApi.downloadPdf(file.rawId);
-                    targetFolder.file(`${fileNamePrefix}${file.name}.pdf`, pdfBlob);
-                }
-                if (format === 'json' || format === 'both') {
-                    const jsonBlob = await invoicesApi.downloadJson(file.rawId);
-                    targetFolder.file(`${fileNamePrefix}${file.name}.json`, jsonBlob);
+                    targetFolder.file(`${finalFileName}.pdf`, pdfBlob);
                 }
 
-            } catch (e) { 
-                console.error(`Error procesando archivo ${file.name}`, e); 
+                // 2. JSON
+                if (format === 'json' || format === 'both') {
+                    const jsonBlob = await invoicesApi.downloadJson(file.rawId);
+                    targetFolder.file(`${finalFileName}.json`, jsonBlob);
+                }
+
+            } catch (e) {
+                console.error(`Error procesando archivo ${file.name}`, e);
             }
         });
 
         await Promise.all(promises);
 
-        // Generar ZIP
-        const zipContent = await zip.generateAsync({ type: "blob" });
-        const url = window.URL.createObjectURL(zipContent);
-        const link = document.createElement('a');
-        link.href = url;
-        
-        // Nombre del ZIP final
-        const zipName = structure === 'organized' 
-            ? `DTEs_Organizados_${formatDateForFile()}.zip`
-            : `DTEs_Unificados_${formatDateForFile()}.zip`;
-
-        link.setAttribute('download', zipName);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-    }
+        // Generar el archivo final
+        const content = await zip.generateAsync({ type: "blob" });
+        const zipFilename = `${rootName}_${formatDateForFile()}.zip`;
+        saveAs(content, zipFilename);
+    },
 };
 
 // --- HELPERS ---
