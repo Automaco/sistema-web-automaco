@@ -1,4 +1,8 @@
-import { Download, ChevronDown, ChevronRight, FileText, Check, X, Calendar, Loader2, User, Folder, RefreshCw } from 'lucide-react';
+import { 
+    Download, ChevronDown, ChevronRight, FileText, Check, X, 
+    Calendar, Loader2, User, Folder, RefreshCw, 
+    FolderTree, FolderOpen 
+} from 'lucide-react';
 import { Button } from '../../../components/button';
 import { useDteSelection } from '../hooks/use-dte-selection';
 import { DteHeader, DteFilters, CheckboxIcon } from '../components/index';
@@ -15,7 +19,8 @@ export const DownloadDTEsPage = () => {
         isClientSelected, isYearSelected, isMonthSelected,
         downloadFormat, setDownloadFormat, handleDownloadSelected, isDownloading,
         statusModal, closeStatusModal, filters,
-        handleFilterChange, clearFilters, refreshData
+        handleFilterChange, clearFilters, refreshData,
+        folderStructure, setFolderStructure 
     } = useDteSelection();
 
     if (isLoading) {
@@ -42,28 +47,32 @@ export const DownloadDTEsPage = () => {
                         }
                     </div>
 
-                    <button
-                        onClick={refreshData}
-                        disabled={isLoading}
-                        className="text-sm font-semibold flex items-center gap-2 text-text-muted hover:text-brand-primary transition-colors disabled:opacity-50"
-                        title="Recargar lista"
-                    >
-                        <RefreshCw
-                            size={16}
-                            className={isLoading ? "animate-spin" : ""}
-                        />
-                        <span className="hidden sm:inline">Recargar</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={refreshData}
+                            disabled={isLoading}
+                            className="text-sm font-semibold flex items-center gap-2 text-text-muted hover:text-brand-primary transition-colors disabled:opacity-50"
+                            title="Recargar lista"
+                        >
+                            <RefreshCw
+                                size={16}
+                                className={isLoading ? "animate-spin" : ""}
+                            />
+                            <span className="hidden sm:inline">Recargar</span>
+                        </button>
 
-                    <button
-                        onClick={toggleSelectAll}
-                        className="text-sm font-semibold flex items-center gap-2 text-brand-primary hover:text-brand-dark transition-colors"
-                    >
-                        {isAllSelected ? <><X size={16} /> Deseleccionar todo</> : <><Check size={16} /> Seleccionar todo</>}
-                    </button>
+                        <div className="h-4 w-px bg-border-base mx-2 hidden sm:block"></div>
+
+                        <button
+                            onClick={toggleSelectAll}
+                            className="text-sm font-semibold flex items-center gap-2 text-brand-primary hover:text-brand-dark transition-colors"
+                        >
+                            {isAllSelected ? <><X size={16} /> Deseleccionar todo</> : <><Check size={16} /> Seleccionar todo</>}
+                        </button>
+                    </div>
                 </div>
 
-                {/* --- ACCORDION LIST (Clients -> Years -> Months -> Files) --- */}
+                {/* --- ACCORDION LIST --- */}
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                     {data.length === 0 && (
                         <div className="text-center py-10 text-text-muted">No se encontraron facturas.</div>
@@ -71,7 +80,6 @@ export const DownloadDTEsPage = () => {
 
                     {data.map((client) => (
                         <div key={client.id} className="border border-border-base rounded-xl overflow-hidden bg-bg-surface shadow-sm mb-4">
-
                             {/* === LEVEL 1: CLIENT === */}
                             <div
                                 className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition-colors select-none"
@@ -88,12 +96,11 @@ export const DownloadDTEsPage = () => {
                                 {expandedItems.includes(client.id) ? <ChevronDown size={20} className="text-text-muted" /> : <ChevronRight size={20} className="text-text-muted" />}
                             </div>
 
-                            {/* === LEVEL 2: YEARS (Inside Client) === */}
+                            {/* === LEVEL 2: YEARS === */}
                             {expandedItems.includes(client.id) && (
                                 <div className="pl-4 pr-2 py-2 space-y-2 bg-bg-surface">
                                     {client.years.map((yearGroup) => (
                                         <div key={yearGroup.id} className="border-l-2 border-border-base ml-2">
-
                                             <div
                                                 className="flex items-center gap-3 p-3 hover:bg-bg-canvas cursor-pointer select-none transition-colors rounded-r-lg"
                                                 onClick={() => toggleExpand(yearGroup.id)}
@@ -109,7 +116,7 @@ export const DownloadDTEsPage = () => {
                                                 {expandedItems.includes(yearGroup.id) ? <ChevronDown size={18} className="text-text-muted" /> : <ChevronRight size={18} className="text-text-muted" />}
                                             </div>
 
-                                            {/* === LEVEL 3: MONTHS (Inside Year) === */}
+                                            {/* === LEVEL 3: MONTHS === */}
                                             {expandedItems.includes(yearGroup.id) && (
                                                 <div className="pl-6 space-y-1">
                                                     {yearGroup.months.map((month) => (
@@ -129,7 +136,7 @@ export const DownloadDTEsPage = () => {
                                                                 {expandedItems.includes(month.id) ? <ChevronDown size={16} className="text-text-muted" /> : <ChevronRight size={16} className="text-text-muted" />}
                                                             </div>
 
-                                                            {/* === LEVEL 4: FILES (Inside Month) === */}
+                                                            {/* === LEVEL 4: FILES === */}
                                                             {expandedItems.includes(month.id) && (
                                                                 <div className="ml-8 mt-1 space-y-1">
                                                                     {month.files.map((file) => {
@@ -164,32 +171,63 @@ export const DownloadDTEsPage = () => {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-6 pt-6 border-t border-border-base flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-sm font-medium text-text-main px-2 py-1 bg-bg-canvas rounded-md border border-border-base">
-                        <span className="text-brand-primary font-bold">{selectedCount}</span> archivos seleccionados
+                <div className="mt-6 pt-6 border-t border-border-base flex flex-col xl:flex-row items-center justify-between gap-4">
+                    <div className="text-sm font-medium text-text-main px-2 py-1 bg-bg-canvas rounded-md border border-border-base self-start xl:self-center">
+                        <span className="text-brand-primary font-bold">{selectedCount}</span> seleccionados
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="relative">
+                    <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
+                        
+                        {/* 3. NUEVO: Selector de Estructura de Carpetas */}
+                        <div className="flex bg-bg-canvas p-1 rounded-lg border border-border-base w-full md:w-auto">
+                            <button
+                                onClick={() => setFolderStructure('organized')}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+                                    folderStructure === 'organized' 
+                                    ? 'bg-bg-surface shadow-sm text-brand-primary font-bold' 
+                                    : 'text-text-muted hover:text-text-main'
+                                }`}
+                                title="Crea carpetas por Año y Mes"
+                            >
+                                <FolderTree size={16} />
+                                <span>Organizado</span>
+                            </button>
+                            <button
+                                onClick={() => setFolderStructure('flat')}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+                                    folderStructure === 'flat' 
+                                    ? 'bg-bg-surface shadow-sm text-brand-primary font-bold' 
+                                    : 'text-text-muted hover:text-text-main'
+                                }`}
+                                title="Todos los archivos en una sola lista"
+                            >
+                                <FolderOpen size={16} />
+                                <span>Mezclado</span>
+                            </button>
+                        </div>
+
+                        {/* Selector de Formato */}
+                        <div className="relative w-full md:w-auto">
                             <select
                                 value={downloadFormat}
                                 onChange={(e) => setDownloadFormat(e.target.value as any)}
-                                className="appearance-none bg-bg-surface border border-border-base text-text-main text-sm rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 cursor-pointer shadow-sm"
+                                className="w-full appearance-none bg-bg-surface border border-border-base text-text-main text-sm rounded-lg px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 cursor-pointer shadow-sm"
                             >
-                                <option value="both">Descargar PDF y JSON</option>
+                                <option value="both">PDF y JSON</option>
                                 <option value="pdf">Solo PDF</option>
                                 <option value="json">Solo JSON</option>
                             </select>
                             <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                         </div>
 
+                        {/* Botón Descargar */}
                         <Button
                             onClick={handleDownloadSelected}
                             disabled={isDownloading || selectedCount === 0}
-                            className="w-auto px-6 py-2.5 flex items-center gap-2 shadow-md hover:shadow-lg transform active:scale-95 transition-all"
+                            className="w-full md:w-auto px-6 py-2.5 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform active:scale-95 transition-all"
                         >
                             {isDownloading ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
-                            <span>{isDownloading ? 'Descargando...' : 'Descargar'}</span>
+                            <span>{isDownloading ? 'Procesando...' : 'Descargar'}</span>
                         </Button>
                     </div>
                 </div>

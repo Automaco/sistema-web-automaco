@@ -34,6 +34,9 @@ export const useDteSelection = () => {
     // Download format
     const [downloadFormat, setDownloadFormat] = useState<'both' | 'pdf' | 'json'>('both');
 
+    // Folder structure preference
+    const [folderStructure, setFolderStructure] = useState<'organized' | 'flat'>('organized');
+
     // Modal State
     const [statusModal, setStatusModal] = useState<{
         isOpen: boolean;
@@ -41,16 +44,42 @@ export const useDteSelection = () => {
         title: string;
         description: string;
     }>({ isOpen: false, type: 'info', title: '', description: '' });
+    
 
     const closeStatusModal = () => setStatusModal(prev => ({ ...prev, isOpen: false }));
 
-    const refreshData = useCallback(async () => {
+    // 1. FUNCIÓN PURA DE CARGA
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
-        // Opcional: Limpiar selección al recargar para evitar errores de IDs que ya no existan
-        setSelectedFiles([]);
-
+        setSelectedFiles([]); // Limpiar selección por seguridad
+        
         try {
+            const grouped = await invoicesService.fetchAll();
+            setData(grouped);
 
+            // Expandir primer cliente por defecto si hay datos
+            if (grouped.length > 0) {
+                const firstClient = grouped[0];
+                const idsToExpand = [firstClient.id];
+                if (firstClient.years.length > 0) {
+                    idsToExpand.push(firstClient.years[0].id);
+                }
+                setExpandedItems(idsToExpand); 
+            }
+        } catch (error) {
+            console.error("Error cargando facturas:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+
+    // 2. FUNCIÓN DE RECARGA MANUAL
+    const refreshData = useCallback(async () => {
+        setIsLoading(true); // Mostramos carga inmediatamente
+        
+        try {
+            // --- PASO A: TRIGGER N8N (Solo aquí) ---
             const userStr = localStorage.getItem('user');
             const accountStr = localStorage.getItem('selected_account');
 
@@ -58,40 +87,35 @@ export const useDteSelection = () => {
                 const user = JSON.parse(userStr);
                 const account = JSON.parse(accountStr);
 
-
-                // Ejecutamos el trigger antes de pedir los correos
+                // Disparamos el workflow y esperamos que N8n responda (o lo lance)
                 await N8nService.triggerWorkflow({
                     user_id: user.id,
                     email_provider_id: account.email_provider_id
                 });
             }
 
-            const grouped = await invoicesService.fetchAll();
-            setData(grouped);
+            // --- PASO B: OBTENER DATOS ACTUALIZADOS ---
+            // Una vez N8n hizo su trabajo (o inició), pedimos los datos frescos
+            await fetchData();
 
-            // Expandir lógica inicial (solo si es la primera carga o si quieres resetear vista)
-            if (grouped.length > 0) {
-                const firstClient = grouped[0];
-                const idsToExpand = [firstClient.id];
-                if (firstClient.years.length > 0) {
-                    idsToExpand.push(firstClient.years[0].id);
-                }
-                // Nota: Si quieres mantener los acordeones abiertos al recargar, 
-                // comenta la siguiente línea o añade lógica extra.
-                setExpandedItems(idsToExpand);
-            }
         } catch (error) {
-            console.error("Error al recargar:", error);
-            // Aquí podrías setear un error en el modal si quisieras
+            console.error("Error en recarga manual (N8n o Fetch):", error);
+            setStatusModal({
+                isOpen: true, 
+                type: 'error', 
+                title: 'Error de sincronización', 
+                description: 'No se pudo sincronizar con el proveedor de correo.'
+            });
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [fetchData]); // Depende de fetchData
 
-    // 1. Load Data
+
+    // 3. EFECTO INICIAL (Al entrar a la página)
     useEffect(() => {
-        refreshData();
-    }, [refreshData]);
+        fetchData();
+    }, [fetchData]);
 
     // --- LÓGICA DE FILTRADO  ---
     const filteredData = useMemo(() => {
@@ -297,7 +321,7 @@ export const useDteSelection = () => {
                 }
             } else {
                 // Bulk download (ZIP)
-                await invoicesService.downloadAsZip(filesToDownload, downloadFormat);
+                await invoicesService.downloadAsZip(filesToDownload, downloadFormat, folderStructure);
             }
 
             setStatusModal({
@@ -341,6 +365,8 @@ export const useDteSelection = () => {
 
         downloadFormat,
         setDownloadFormat,
+        folderStructure,    
+        setFolderStructure,
         handleDownloadSelected,
         isDownloading,
         statusModal,

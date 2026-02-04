@@ -20,11 +20,10 @@ export const invoicesService = {
                 ? await invoicesApi.downloadPdf(id)
                 : await invoicesApi.downloadJson(id);
 
-            // Crear Blob y link de descarga en el navegador
             const url = window.URL.createObjectURL(new Blob([response]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `${filename}.${type}`); // ej: DTE-123.pdf
+            link.setAttribute('download', `${filename}.${type}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -34,51 +33,88 @@ export const invoicesService = {
         }
     },
 
-    downloadAsZip: async (files: DteFile[], format: 'pdf' | 'json' | 'both') => {
+    /**
+     * Descarga masiva en ZIP
+     * @param files Lista de archivos a descargar
+     * @param format Formato de descarga (pdf, json, ambos)
+     * @param structure 'organized' (Carpetas) | 'flat' (Todo mezclado)
+     */
+    downloadAsZip: async (files: DteFile[], format: 'pdf' | 'json' | 'both', structure: 'organized' | 'flat') => {
         const zip = new JSZip();
-        const rootFolder = zip.folder("Facturas_DTE");
+        
+        // Nombramos la carpeta raíz dependiendo del modo
+        const rootFolderName = structure === 'organized' ? "Facturas_Organizadas" : "Facturas_Unificadas";
+        const rootFolder = zip.folder(rootFolderName);
+
+        if (!rootFolder) return;
 
         const promises = files.map(async (file) => {
             try {
-                // Estructura: Cliente / Año / Mes / Archivo
-                const [monthStr, yearStr] = file.date.split('/'); // Ajustar según tu formato de fecha
-                const monthName = getMonthName(parseInt(monthStr));
+                // Definimos dónde se guardará el archivo dentro del ZIP
+                let targetFolder = rootFolder;
+                let fileNamePrefix = "";
 
-                // Cliente -> Año -> Mes
-                const folder = rootFolder
-                    ?.folder(file.clientName)
-                    ?.folder(yearStr)
-                    ?.folder(monthName);
+                if (structure === 'organized') {
+                    // Asumiendo formato dd/mm/yyyy
+                    const parts = file.date.split('/'); 
+                    // parts[0] = dia, parts[1] = mes, parts[2] = año
+                    const monthStr = parts[1]; 
+                    const yearStr = parts[2];
+                    
+                    const monthName = getMonthName(parseInt(monthStr));
 
-                if (!folder) return;
+                    // Creamos la jerarquía
+                    const clientFolder = rootFolder.folder(file.clientName);
+                    const yearFolder = clientFolder?.folder(yearStr);
+                    const monthFolder = yearFolder?.folder(monthName);
 
+                    if (monthFolder) {
+                        targetFolder = monthFolder;
+                    }
+                    // En modo organizado, el nombre del archivo se mantiene limpio
+                    fileNamePrefix = ""; 
+
+                } else {
+                    fileNamePrefix = `[${file.clientName}] `;
+                }
+
+                // --- DESCARGA DE BLOBS ---
                 if (format === 'pdf' || format === 'both') {
                     const pdfBlob = await invoicesApi.downloadPdf(file.rawId);
-                    folder.file(`${file.name}.pdf`, pdfBlob);
+                    targetFolder.file(`${fileNamePrefix}${file.name}.pdf`, pdfBlob);
                 }
                 if (format === 'json' || format === 'both') {
                     const jsonBlob = await invoicesApi.downloadJson(file.rawId);
-                    folder.file(`${file.name}.json`, jsonBlob);
+                    targetFolder.file(`${fileNamePrefix}${file.name}.json`, jsonBlob);
                 }
-            } catch (e) { console.error(e); }
+
+            } catch (e) { 
+                console.error(`Error procesando archivo ${file.name}`, e); 
+            }
         });
 
         await Promise.all(promises);
-        // ... generar zip igual que antes ...
+
+        // Generar ZIP
         const zipContent = await zip.generateAsync({ type: "blob" });
         const url = window.URL.createObjectURL(zipContent);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `DTEs_${formatDateForFile()}.zip`);
+        
+        // Nombre del ZIP final
+        const zipName = structure === 'organized' 
+            ? `DTEs_Organizados_${formatDateForFile()}.zip`
+            : `DTEs_Unificados_${formatDateForFile()}.zip`;
+
+        link.setAttribute('download', zipName);
         document.body.appendChild(link);
         link.click();
         link.remove();
     }
 };
 
-// Helper para obtener nombre del mes
+// --- HELPERS ---
 const getMonthName = (monthIndex: number) => {
-    // monthIndex viene 1-12, Date espera 0-11
     const date = new Date();
     date.setMonth(monthIndex - 1);
     const monthName = date.toLocaleString('es-ES', { month: 'long' });
@@ -89,7 +125,6 @@ const groupInvoicesByClientAndDate = (invoices: Invoice[]): ClientGroup[] => {
     const clients: ClientGroup[] = [];
 
     invoices.forEach(inv => {
-        // Usamos pdf_created_at si existe, sino created_at
         const dateStr = inv.pdf_created_at || inv.created_at;
         const date = new Date(dateStr);
 
@@ -99,39 +134,34 @@ const groupInvoicesByClientAndDate = (invoices: Invoice[]): ClientGroup[] => {
         const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
         const clientName = inv.client_name || 'Sin Cliente';
-        const clientId = clientName; // Usamos el nombre como ID
+        const clientId = clientName; 
 
         const yearId = `${clientId}-${year}`;
         const monthId = `${clientId}-${year}-${monthIndex}`;
 
-        // 1. Buscar o crear CLIENTE
         let clientGroup = clients.find(c => c.id === clientId);
         if (!clientGroup) {
             clientGroup = { id: clientId, clientName, years: [] };
             clients.push(clientGroup);
         }
 
-        // 2. Buscar o crear AÑO dentro del cliente
         let yearGroup = clientGroup.years.find(y => y.year === year);
         if (!yearGroup) {
             yearGroup = { id: yearId, year, months: [] };
             clientGroup.years.push(yearGroup);
         }
 
-        // 3. Buscar o crear MES dentro del año
         let monthGroup = yearGroup.months.find(m => m.id === monthId);
         if (!monthGroup) {
             monthGroup = { id: monthId, monthName: monthNameCap, files: [] };
             yearGroup.months.push(monthGroup);
         }
 
-        // 4. Agregar archivo
         monthGroup.files.push({
             id: inv.id.toString(),
             rawId: inv.id,
-            // Usamos el nombre original si existe, sino el código generado
             name: inv.pdf_original_name || `DTE-${inv.generation_code.substring(0, 8)}`,
-            date: date.toLocaleDateString('es-ES'),
+            date: date.toLocaleDateString('es-ES'), 
             size: 'N/A',
             clientName: clientName
         });
