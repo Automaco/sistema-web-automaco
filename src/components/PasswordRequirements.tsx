@@ -1,4 +1,4 @@
-import { Check, X, Circle } from 'lucide-react';
+import { Check, Circle } from 'lucide-react';
 
 interface PasswordRequirementsProps {
     password: string;

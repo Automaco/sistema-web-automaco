@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { authService } from '../../../services/auth.services';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../../../utils/http-client';
 
 // Interfaz para el estado de errores

@@ -1,5 +1,5 @@
 import { httpClient } from '../utils/http-client';
-import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload, type ActivacionErrorResponse, type ActivateAccountPayload, type ActivateAccountResponse } from '../types/auth.types';
+import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload, type ActivateAccountPayload, type ActivateAccountResponse } from '../types/auth.types';
 
 export const authApi = {
     /**

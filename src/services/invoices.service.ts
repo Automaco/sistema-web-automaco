@@ -41,7 +41,7 @@ export const invoicesService = {
         const promises = files.map(async (file) => {
             try {
                 // Estructura: Cliente / Año / Mes / Archivo
-                const [day, monthStr, yearStr] = file.date.split('/'); // Ajustar según tu formato de fecha
+                const [monthStr, yearStr] = file.date.split('/'); // Ajustar según tu formato de fecha
                 const monthName = getMonthName(parseInt(monthStr));
 
                 // Cliente -> Año -> Mes
