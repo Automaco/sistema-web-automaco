@@ -179,25 +179,26 @@ export const DownloadDTEsPage = () => {
                     <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
                         
                         {/* 3. NUEVO: Selector de Estructura de Carpetas */}
-                        <div className="flex bg-bg-canvas p-1 rounded-lg border border-border-base w-full md:w-auto">
+                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700 w-full md:w-auto">
                             <button
                                 onClick={() => setFolderStructure('organized')}
                                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
                                     folderStructure === 'organized' 
-                                    ? 'bg-bg-surface shadow-sm text-brand-primary font-bold' 
-                                    : 'text-text-muted hover:text-text-main'
+                                    ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 title="Crea carpetas por Año y Mes"
                             >
                                 <FolderTree size={16} />
+                                {/* Quitamos el 'hidden' para que siempre se vea el texto */}
                                 <span>Organizado</span>
                             </button>
                             <button
                                 onClick={() => setFolderStructure('flat')}
                                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
                                     folderStructure === 'flat' 
-                                    ? 'bg-bg-surface shadow-sm text-brand-primary font-bold' 
-                                    : 'text-text-muted hover:text-text-main'
+                                    ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                                 title="Todos los archivos en una sola lista"
                             >
