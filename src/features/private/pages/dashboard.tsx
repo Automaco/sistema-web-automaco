@@ -56,7 +56,7 @@ export const DashboardPage = () => {
 
             <div className="max-w-[1600px] mx-auto w-full flex flex-col gap-6">
 
-                <div>
+                <div className="ml-10 md:ml-0">
                     <h1 className="text-2xl md:text-3xl font-bold text-text-main">Dashboard</h1>
                     <p className="text-text-muted text-sm mt-1">Resumen de actividad reciente</p>
                 </div>

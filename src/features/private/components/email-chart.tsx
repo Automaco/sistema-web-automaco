@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine
 } from 'recharts';
@@ -17,6 +17,7 @@ interface EmailChartProps {
 
 export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps) => {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
     // Optimizamos los manejadores para evitar re-renderizados innecesarios
     const handleBarEnter = useCallback((_: any, index: number) => {
@@ -28,10 +29,19 @@ export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps
         setActiveIndex(null);
     }, []);
 
+    // Solo se ejecuta una vez al montar el componente
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        // Retornamos el mismo contenedor vacío o un loader para evitar saltos visuales
+        return <div className="w-full h-full bg-card-bg rounded-3xl border border-gray-100 min-h-[300px]" />;
+    }
     return (
-        <div className="w-full h-full bg-card-bg p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="w-full h-full bg-card-bg p-4 md:p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
             {/* --- HEADER --- */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-3">
                 <h2 className="text-2xl font-bold bg-bg-surface text-text-main">
                     Correos electrónicos recopilados en
                 </h2>
@@ -51,25 +61,26 @@ export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps
             </div>
 
             {/* --- GRÁFICA --- */}
-            <div className="h-[400px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="flex-1 min-h-[290px] min-w-0 w-full">
+                <ResponsiveContainer width="100%" height="100%" >
                     <BarChart
                         data={data}
-                        margin={{ top: 20, right: 0, left: -25, bottom: 0 }}
+                        margin={{ top: 30, right: 0, left: -25, bottom: 30 }} // Verificar esta parte margin={{ top: 20, right: 0, left: -10, bottom: 30 }}
                     >
-                        <CartesianGrid 
-                            strokeDasharray="3 3" 
-                            vertical={false} 
-                            horizontal={false} 
-                            style={{ pointerEvents: 'none' }} 
+                        <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                            horizontal={false}
+                            style={{ pointerEvents: 'none' }}
                         />
-
                         <XAxis
                             dataKey="month"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                            tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
                             dy={10}
+                            tickFormatter={(value) => window.innerWidth < 640 ? value.charAt(0) : value.slice(0, 3)}
+                            minTickGap={2}
                         />
                         <YAxis
                             axisLine={false}
@@ -79,10 +90,10 @@ export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps
 
                         <Tooltip
                             cursor={{ fill: 'transparent' }} // Importante para que no haya sombra gris default
-                            contentStyle={{ 
-                                borderRadius: '12px', 
-                                border: 'none', 
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                            contentStyle={{
+                                borderRadius: '12px',
+                                border: 'none',
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                             }}
                             // pointerEvents: 'none' es CRUCIAL para evitar que el tooltip cause parpadeo
                             wrapperStyle={{ pointerEvents: 'none', outline: 'none' }}
@@ -96,8 +107,8 @@ export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps
 
                         <Bar
                             dataKey="emails"
-                            radius={[6, 6, 6, 6]}
-                            barSize={32}
+                            radius={[4, 4, 0, 0]}
+                            maxBarSize={32}
                             onMouseEnter={handleBarEnter}
                             onMouseLeave={handleBarLeave}
                             // duration baja para respuesta rápida, pero easing suave
@@ -106,12 +117,10 @@ export const EmailChart = ({ data, selectedYear, onYearChange }: EmailChartProps
                             {data.map((_, index) => (
                                 <Cell
                                     key={`cell-${index}`}
-                                    fill={activeIndex === index 
-                                        ? 'var(--color-bar-hover)' 
+                                    fill={activeIndex === index
+                                        ? 'var(--color-bar-hover)'
                                         : 'var(--color-bar)'
                                     }
-                                    // Eliminamos la transition CSS aquí porque React ya maneja el cambio de estado
-                                    // Si dejas transition-all a veces entra en conflicto con el re-render de Recharts
                                     className="cursor-pointer"
                                 />
                             ))}
