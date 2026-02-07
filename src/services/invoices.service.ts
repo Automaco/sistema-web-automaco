@@ -155,7 +155,7 @@ const groupInvoicesByClientAndDate = (invoices: Invoice[]): ClientGroup[] => {
         monthGroup.files.push({
             id: inv.id.toString(),
             rawId: inv.id,
-            name: inv.pdf_original_name || `DTE-${inv.generation_code.substring(0, 8)}`,
+            name: (inv.pdf_original_name || `DTE-${inv.generation_code.substring(0, 8)}`).replace(/\.[^/.]+$/, ""),
             date: date.toLocaleDateString('es-ES'), 
             size: 'N/A',
             clientName: clientName,
