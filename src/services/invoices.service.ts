@@ -149,13 +149,18 @@ const groupInvoicesByClientAndDate = (invoices: Invoice[]): ClientGroup[] => {
             yearGroup.months.push(monthGroup);
         }
 
+        const hasPdf = !!inv.pdf_original_name;
+        const hasJson = !!inv.json_original_name;
+
         monthGroup.files.push({
             id: inv.id.toString(),
             rawId: inv.id,
             name: inv.pdf_original_name || `DTE-${inv.generation_code.substring(0, 8)}`,
             date: date.toLocaleDateString('es-ES'), 
             size: 'N/A',
-            clientName: clientName
+            clientName: clientName,
+            hasPdf: hasPdf,
+            hasJson: hasJson
         });
     });
 

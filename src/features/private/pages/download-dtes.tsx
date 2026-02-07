@@ -1,7 +1,7 @@
-import { 
-    Download, ChevronDown, ChevronRight, FileText, Check, X, 
-    Calendar, Loader2, User, Folder, RefreshCw, 
-    FolderTree, FolderOpen 
+import {
+    Download, ChevronDown, ChevronRight, FileText, Check, X,
+    Calendar, Loader2, User, Folder, RefreshCw,
+    FolderTree, FolderOpen
 } from 'lucide-react';
 import { Button } from '../../../components/button';
 import { useDteSelection } from '../hooks/use-dte-selection';
@@ -20,7 +20,7 @@ export const DownloadDTEsPage = () => {
         downloadFormat, setDownloadFormat, handleDownloadSelected, isDownloading,
         statusModal, closeStatusModal, filters,
         handleFilterChange, clearFilters, refreshData,
-        folderStructure, setFolderStructure 
+        folderStructure, setFolderStructure
     } = useDteSelection();
 
     if (isLoading) {
@@ -39,7 +39,10 @@ export const DownloadDTEsPage = () => {
                 />
 
                 {/* Control Bar */}
-                <div className="flex items-center justify-between mb-4 px-1">
+                {/* Control Bar (Responsive Mejorado) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
+
+                    {/* 1. Texto de conteo */}
                     <div className="text-text-muted text-sm font-medium">
                         {selectedCount > 0
                             ? <span className="text-brand-primary font-bold">{selectedCount} de {totalFilesCount} archivos seleccionados</span>
@@ -47,27 +50,34 @@ export const DownloadDTEsPage = () => {
                         }
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {/* 2. Botones de Acción */}
+                    <div className="flex items-center justify-between gap-2 w-full sm:w-auto bg-gray-50 dark:bg-white/5 sm:bg-transparent p-1.5 sm:p-0 rounded-lg border border-border-base sm:border-none">
+
                         <button
                             onClick={refreshData}
                             disabled={isLoading}
-                            className="text-sm font-semibold flex items-center gap-2 text-text-muted hover:text-brand-primary transition-colors disabled:opacity-50"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-text-muted hover:text-brand-primary transition-colors disabled:opacity-50 py-1 mx-3"
                             title="Recargar lista"
                         >
                             <RefreshCw
                                 size={16}
                                 className={isLoading ? "animate-spin" : ""}
                             />
-                            <span className="hidden sm:inline">Recargar</span>
+                            {/* Mostramos el texto siempre para claridad, ya que ahora hay espacio */}
+                            <span>Recargar</span>
                         </button>
 
-                        <div className="h-4 w-px bg-border-base mx-2 hidden sm:block"></div>
+                        {/* Separador */}
+                        <div className="h-5 w-px bg-border-base mx-1"></div>
 
                         <button
                             onClick={toggleSelectAll}
-                            className="text-sm font-semibold flex items-center gap-2 text-brand-primary hover:text-brand-dark transition-colors"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-dark transition-colors py-1 mx-3"
                         >
-                            {isAllSelected ? <><X size={16} /> Deseleccionar todo</> : <><Check size={16} /> Seleccionar todo</>}
+                            {isAllSelected
+                                ? <><X size={16} /> <span>Deseleccionar</span></>
+                                : <><Check size={16} /> <span>Seleccionar todo</span></>
+                            }
                         </button>
                     </div>
                 </div>
@@ -148,9 +158,43 @@ export const DownloadDTEsPage = () => {
                                                                                 onClick={() => toggleFileSelection(file.id)}
                                                                             >
                                                                                 <CheckboxIcon checked={isSelected} onClick={(e) => { e.stopPropagation(); toggleFileSelection(file.id); }} />
+
+                                                                                {/* Icono Principal: Cambia si falta alguno */}
                                                                                 <FileText size={16} className={isSelected ? 'text-brand-primary' : 'text-text-muted'} />
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <p className={`text-xs font-semibold truncate ${isSelected ? 'text-brand-primary' : 'text-text-main'}`}>{file.name}</p>
+
+                                                                                <div className="flex-1 min-w-0 flex flex-col">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        {/* Nombre del archivo */}
+                                                                                        <p className={`text-xs font-semibold truncate ${isSelected ? 'text-brand-primary' : 'text-text-main'}`}>
+                                                                                            {file.name}
+                                                                                        </p>
+
+                                                                                        {/* --- INDICADORES DE FORMATO --- */}
+                                                                                        <div className="flex gap-1">
+                                                                                            {/* Badge PDF */}
+                                                                                            <span
+                                                                                                className={`text-[9px] px-1 rounded font-bold border ${file.hasPdf
+                                                                                                        ? 'bg-rose-100 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800'
+                                                                                                        : 'bg-gray-100 text-gray-400 border-gray-200 line-through opacity-50'
+                                                                                                    }`}
+                                                                                                title={file.hasPdf ? "PDF Disponible" : "PDF No disponible"}
+                                                                                            >
+                                                                                                PDF
+                                                                                            </span>
+
+                                                                                            {/* Badge JSON */}
+                                                                                            <span
+                                                                                                className={`text-[9px] px-1 rounded font-bold border ${file.hasJson
+                                                                                                        ? 'bg-amber-100 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+                                                                                                        : 'bg-gray-100 text-gray-400 border-gray-200 line-through opacity-50'
+                                                                                                    }`}
+                                                                                                title={file.hasJson ? "JSON Disponible" : "JSON No disponible"}
+                                                                                            >
+                                                                                                JSON
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </div>
+
                                                                                     <p className="text-[10px] text-text-muted">{file.date}</p>
                                                                                 </div>
                                                                             </div>
@@ -177,16 +221,15 @@ export const DownloadDTEsPage = () => {
                     </div>
 
                     <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
-                        
+
                         {/* 3. NUEVO: Selector de Estructura de Carpetas */}
                         <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700 w-full md:w-auto">
                             <button
                                 onClick={() => setFolderStructure('organized')}
-                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                                    folderStructure === 'organized' 
-                                    ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold' 
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${folderStructure === 'organized'
+                                        ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
                                 title="Crea carpetas por Año y Mes"
                             >
                                 <FolderTree size={16} />
@@ -195,11 +238,10 @@ export const DownloadDTEsPage = () => {
                             </button>
                             <button
                                 onClick={() => setFolderStructure('flat')}
-                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
-                                    folderStructure === 'flat' 
-                                    ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold' 
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
+                                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${folderStructure === 'flat'
+                                        ? 'bg-white dark:bg-gray-600 shadow-sm text-brand-primary font-bold'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
                                 title="Todos los archivos en una sola lista"
                             >
                                 <FolderOpen size={16} />

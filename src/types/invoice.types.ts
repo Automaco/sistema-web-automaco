@@ -16,6 +16,8 @@ export interface DteFile {
     date: string;
     size: string;
     clientName: string; 
+    hasPdf: boolean;
+    hasJson: boolean;
 }
 
 export interface MonthGroup {
