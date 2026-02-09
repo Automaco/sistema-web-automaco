@@ -55,9 +55,9 @@ export const ResetPasswordPage = () => {
 
         // CASO B: El enlace es correcto = Se muestra el form
         return (
-            <div className="w-full max-w-lg flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="w-full max-w-sm flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-brand-primary mb-3">
+                    <h1 className="text-4xl font-bold text-brand-primary mb-3 leading-tight">
                         Nueva contraseña
                     </h1>
                     <p className="text-text-muted">
@@ -86,7 +86,9 @@ export const ResetPasswordPage = () => {
                     {/* Requerimientos de contraseña */}
 
                     {formData.password.length > 0 && (
-                        <PasswordRequirements password={formData.password} />
+                        <div className="w-full">
+                            <PasswordRequirements password={formData.password} />
+                        </div>
                     )}
 
                     <Button type="submit" className="mt-4 w-full h-12 text-lg" disabled={isLoading}>
@@ -126,9 +128,12 @@ export const ResetPasswordPage = () => {
             </div>
 
             {/* SECCIÓN DERECHA */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-bg-surface relative z-10 transition-colors duration-300">
-                {/* Se rendendiza*/}
-                {renderContent()}
+            <div className="w-full lg:w-1/2 h-full bg-bg-surface relative z-10 transition-colors duration-300 overflow-y-auto">
+                <div className="min-h-full flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24">
+                    {/* Se rendendiza*/}
+                    {renderContent()}
+                </div>
+
             </div>
         </div>
     );

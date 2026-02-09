@@ -69,74 +69,80 @@ export const RegisterPage = () => {
                     </Button>
                 </Link>
             </div>
-            {/* SECCIÓN IZQUIERDA: Formulario */}
+            {/* SECCIÓN DERECHA: Formulario */}
             {/* bg-bg-surface: Se vuelve blanco en Light, Slate-800 en Dark */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-bg-surface relative z-10 rounded-tl-[1vw] rounded-bl-[1vw] transition-colors duration-300">
-                <div className="w-full max-w-sm flex flex-col items-center">
+            <div className="w-full lg:w-1/2 h-full bg-bg-surface relative z-10 rounded-tl-[1vw] rounded-bl-[1vw] transition-colors duration-300 overflow-y-auto">
+                <div className="min-h-full flex flex-col justify-center items-center p-8 sm:p-12 lg:p-20">
+                    <div className="w-full max-w-sm flex flex-col items-center">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-title mb-2">
+                                Crear cuenta
+                            </h1>
+                            <p className="text-text-muted text-sm">
+                                Únete para optimizar tu gestión
+                            </p>
+                        </div>
 
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-title mb-2">
-                            Crear cuenta
-                        </h1>
-                    </div>
+                        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 items-center">
+                            {/* 1. INPUT GENERAL (Con icono opcional) */}
+                            <Input
+                                label="Nombre de la institución"
+                                name="name"
+                                type="text"
+                                placeholder="Nombre"
+                                value={formData.name}
+                                onChange={handleInputChange}
+                                error={errors.name}
+                            />
 
-                    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 items-center">
-                        {/* 1. INPUT GENERAL (Con icono opcional) */}
-                        <Input
-                            label="Nombre de la institución"
-                            name="name"
-                            type="text"
-                            placeholder="Nombre"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            error={errors.name}
-                        />
+                            {/* 2. INPUT GENERAL (Con icono opcional) */}
+                            <Input
+                                label="Correo electrónico"
+                                name="email"
+                                type="email"
+                                placeholder="nombre@ejemplo.com"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                // Aquí pasamos el icono como componente, mucho más flexible
+                                icon={<Mail size={20} />}
+                                error={errors.email}
+                            />
 
-                        {/* 2. INPUT GENERAL (Con icono opcional) */}
-                        <Input
-                            label="Correo electrónico"
-                            name="email"
-                            type="email"
-                            placeholder="nombre@ejemplo.com"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            // Aquí pasamos el icono como componente, mucho más flexible
-                            icon={<Mail size={20} />}
-                            error={errors.email}
-                        />
+                            {/* 3. INPUT DE CONTRASEÑA (Separado) */}
+                            <PasswordInput
+                                label="Contraseña"
+                                name="password"
+                                placeholder="••••••••"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                error={errors.password}
+                            />
+                            {/* 4. CONFIRMACION DE CONTRASEÑA (Separado) */}
+                            <PasswordInput
+                                label="Confirmar contraseña"
+                                name="confirmPassword"
+                                placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                error={errors.confirmPassword}
+                            />
+                            {/* Requerimientos de contraseña */}
+                            {formData.password.length > 0 && (
+                                <div className="w-full">
+                                    <PasswordRequirements password={formData.password} />
+                                </div>
+                            )}
+                            <Button type="submit" className="mt-4" disabled={isLoading} >
+                                {isLoading ? 'Registrando...' : 'Registrar'}
+                            </Button>
+                        </form>
 
-                        {/* 3. INPUT DE CONTRASEÑA (Separado) */}
-                        <PasswordInput
-                            label="Contraseña"
-                            name="password"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            error={errors.password}
-                        />
-                        {/* 4. CONFIRMACION DE CONTRASEÑA (Separado) */}
-                        <PasswordInput
-                            label="Confirmar contraseña"
-                            name="confirmPassword"
-                            placeholder="••••••••"
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            error={errors.confirmPassword}
-                        />
-                        {/* Requerimientos de contraseña */}
-                        {formData.password.length > 0 && (
-                            <PasswordRequirements password={formData.password} />
-                        )}
-                        <Button type="submit" className="mt-4" disabled={isLoading  } >
-                            {isLoading ? 'Registrando...' : 'Registrar'}
-                        </Button>
-                    </form>
-
-                    {/* Footer Móvil */}
-                    <div className="mt-6 text-sm text-text-muted lg:hidden">
-                        <p>
-                            ¿Ya tienes cuenta? <Link to="/auth/login" className="text-text-main font-bold hover:underline hover:text-brand-primary ml-1">Iniciar sesión</Link>
-                        </p>
+                        {/* Footer Móvil */}
+                        <div className="mt-6 text-sm text-text-muted lg:hidden">
+                            <p>
+                                ¿Ya tienes cuenta? <Link to="/auth/login" className="text-text-main font-bold hover:underline hover:text-brand-primary ml-1">Iniciar sesión</Link>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
