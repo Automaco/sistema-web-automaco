@@ -1,3 +1,6 @@
+// Importacion de imagenes
+import sendEmailSvg from '../assets/sendEmail.svg';
+import sendCodeSvg from '../assets/sendCode.svg';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../context/theme-context';
@@ -156,10 +159,8 @@ const RecoverPasswordBackground = () => (
         <div className="absolute h-full hidden md:flex flex-col justify-center items-center w-1/2 pointer-events-none pr-12">
             <div className="absolute scale-140 -translate-y-35 -translate-x-15">
                 <img
-                    // REEMPLAZA ESTA URL CON TU IMAGEN.
-                    // Usa una imagen abstracta, patrones o algo relacionado a tu marca.
-                    src="../src/assets/sendEmail.svg"
-                    alt="Fondo decorativo"
+                   src={sendEmailSvg}
+                    alt="Imagen Email"
                     className="w-full h-full object-cover grayscale-[20%]"
                 />
             </div>
@@ -267,8 +268,8 @@ const VerifyCodeBackground = () => (
                 md:-translate-x-[10%]
             ">
                 <img
-                    src="../src/assets/sendCode.svg"
-                    alt="Fondo decorativo"
+                    src={sendCodeSvg}
+                    alt="Imagen Code"
                     className="w-full h-full object-cover grayscale-[20%]"
                 />
             </div>
