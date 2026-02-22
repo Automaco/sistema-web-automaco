@@ -44,7 +44,7 @@ export const useDteSelection = () => {
         title: string;
         description: string;
     }>({ isOpen: false, type: 'info', title: '', description: '' });
-    
+
 
     const closeStatusModal = () => setStatusModal(prev => ({ ...prev, isOpen: false }));
 
@@ -52,7 +52,7 @@ export const useDteSelection = () => {
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         setSelectedFiles([]); // Limpiar selección por seguridad
-        
+
         try {
             const grouped = await invoicesService.fetchAll();
             setData(grouped);
@@ -64,7 +64,7 @@ export const useDteSelection = () => {
                 if (firstClient.years.length > 0) {
                     idsToExpand.push(firstClient.years[0].id);
                 }
-                setExpandedItems(idsToExpand); 
+                setExpandedItems(idsToExpand);
             }
         } catch (error) {
             console.error("Error cargando facturas:", error);
@@ -73,13 +73,22 @@ export const useDteSelection = () => {
         }
     }, []);
 
+    // Helper interno para contar archivos (lo usaremos para comparar)
+    const countTotalFiles = (groups: ClientGroup[]) => {
+        return groups.reduce((acc, client) =>
+            acc + client.years.reduce((accY, year) =>
+                accY + year.months.reduce((accM, month) =>
+                    accM + month.files.length
+                    , 0)
+                , 0)
+            , 0);
+    };
 
     // 2. FUNCIÓN DE RECARGA MANUAL
     const refreshData = useCallback(async () => {
-        setIsLoading(true); // Mostramos carga inmediatamente
-        
+        setIsLoading(true);
+
         try {
-            // --- PASO A: TRIGGER N8N (Solo aquí) ---
             const userStr = localStorage.getItem('user');
             const accountStr = localStorage.getItem('selected_account');
 
@@ -87,29 +96,71 @@ export const useDteSelection = () => {
                 const user = JSON.parse(userStr);
                 const account = JSON.parse(accountStr);
 
-                // Disparamos el workflow y esperamos que N8n responda (o lo lance)
+                // Contamos cuántas facturas hay ANTES de ejecutar n8n
+                const oldData = await invoicesService.fetchAll();
+                const oldCount = countTotalFiles(oldData);
+
+                // Disparamos n8n
                 await N8nService.triggerWorkflow({
                     user_id: user.id,
                     email_provider_id: account.email_provider_id
                 });
+
+                // Estrategia de Polling
+                // Intentaremos buscar nuevos datos cada 3 segundos (máximo 5 intentos = 15 segundos extra)
+                let attempts = 0;
+                let newData = oldData;
+                let newCount = oldCount;
+
+                while (attempts < 5) {
+                    // Esperamos 3 segundos antes de volver a preguntar a la BD
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+
+                    newData = await invoicesService.fetchAll();
+                    newCount = countTotalFiles(newData);
+
+                    // Si el conteo subió, significa que n8n ya guardó cosas nuevas, salimos del bucle.
+                    if (newCount > oldCount) {
+                        break;
+                    }
+                    attempts++;
+                }
+
+                // Actualizamos la pantalla con los datos finales
+                setData(newData);
+
+                if (newData.length > 0) {
+                    const firstClient = newData[0];
+                    const idsToExpand = [firstClient.id];
+                    if (firstClient.years.length > 0) idsToExpand.push(firstClient.years[0].id);
+                    setExpandedItems(idsToExpand);
+                }
+
+                // Le avisamos al usuario el resultado
+                const addedFiles = newCount - oldCount;
+
+                setStatusModal({
+                    isOpen: true,
+                    type: addedFiles > 0 ? 'success' : 'info',
+                    title: 'Sincronización Terminada',
+                    description: addedFiles > 0
+                        ? `¡Éxito! Se encontraron y procesaron ${addedFiles} nuevas facturas.`
+                        : 'El proceso terminó, pero no se encontraron facturas nuevas en el correo.'
+                });
             }
 
-            // --- PASO B: OBTENER DATOS ACTUALIZADOS ---
-            // Una vez N8n hizo su trabajo (o inició), pedimos los datos frescos
-            await fetchData();
-
         } catch (error) {
-            console.error("Error en recarga manual (N8n o Fetch):", error);
+            console.error("Error en recarga manual:", error);
             setStatusModal({
-                isOpen: true, 
-                type: 'error', 
-                title: 'Error de sincronización', 
-                description: 'No se pudo sincronizar con el proveedor de correo.'
+                isOpen: true,
+                type: 'error',
+                title: 'Error de sincronización',
+                description: 'Hubo un problema al intentar conectar con el correo.'
             });
         } finally {
             setIsLoading(false);
         }
-    }, [fetchData]); // Depende de fetchData
+    }, []);
 
 
     // 3. EFECTO INICIAL (Al entrar a la página)
@@ -365,7 +416,7 @@ export const useDteSelection = () => {
 
         downloadFormat,
         setDownloadFormat,
-        folderStructure,    
+        folderStructure,
         setFolderStructure,
         handleDownloadSelected,
         isDownloading,
