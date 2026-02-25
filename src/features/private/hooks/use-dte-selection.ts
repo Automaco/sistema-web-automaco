@@ -359,27 +359,55 @@ export const useDteSelection = () => {
             .flatMap(m => m.files)
             .filter(f => selectedFiles.includes(f.id));
 
+        // Filtramos los archivos para asegurarnos de que tengan el formato que el usuario pidió
+        const validFilesToDownload = filesToDownload.filter(file => {
+            if (downloadFormat === 'pdf') return file.hasPdf;
+            if (downloadFormat === 'json') return file.hasJson;
+            // Si es 'both', nos sirve si tiene al menos uno de los dos
+            return file.hasPdf || file.hasJson;
+        });
+
+        // Si después de filtrar no queda ningún archivo válido, avisamos al usuario
+        if (validFilesToDownload.length === 0) {
+            setIsDownloading(false);
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'Archivos no disponibles',
+                description: `Los archivos seleccionados no tienen el formato "${downloadFormat.toUpperCase()}" disponible.`
+            });
+            return;
+        }
+
         try {
-            if (selectedFiles.length === 1) {
+            if (validFilesToDownload.length === 1) {
                 // Single file download
-                for (const file of filesToDownload) {
-                    if (downloadFormat === 'pdf' || downloadFormat === 'both') {
-                        await invoicesService.downloadFile(file.rawId, 'pdf', file.name);
-                    }
-                    if (downloadFormat === 'json' || downloadFormat === 'both') {
-                        await invoicesService.downloadFile(file.rawId, 'json', file.name);
-                    }
+                const file = validFilesToDownload[0];
+                
+                // Solo intentamos descargar si la bandera dice que existe
+                if ((downloadFormat === 'pdf' || downloadFormat === 'both') && file.hasPdf) {
+                    await invoicesService.downloadFile(file.rawId, 'pdf', file.name);
+                }
+                
+                if ((downloadFormat === 'json' || downloadFormat === 'both') && file.hasJson) {
+                    await invoicesService.downloadFile(file.rawId, 'json', file.name);
                 }
             } else {
                 // Bulk download (ZIP)
-                await invoicesService.downloadAsZip(filesToDownload, downloadFormat, folderStructure);
+                await invoicesService.downloadAsZip(validFilesToDownload, downloadFormat, folderStructure);
             }
+
+            // Avisar si se omitieron archivos
+            const skippedCount = filesToDownload.length - validFilesToDownload.length;
+            const extraMessage = skippedCount > 0 
+                ? ` Se omitieron ${skippedCount} archivos porque no tenían el formato solicitado.` 
+                : '';
 
             setStatusModal({
                 isOpen: true,
                 type: 'success',
                 title: 'Descarga completada',
-                description: `Se han procesado ${filesToDownload.length} archivos exitosamente.`
+                description: `Se han procesado ${validFilesToDownload.length} archivos exitosamente.${extraMessage}`
             });
         } catch {
             setStatusModal({

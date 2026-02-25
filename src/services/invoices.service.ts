@@ -79,14 +79,14 @@ export const invoicesService = {
 
                 // --- DESCARGAR Y AGREGAR AL ZIP ---
                 
-                // 1. PDF
-                if (format === 'pdf' || format === 'both') {
+                // 1. PDF (Solo si el formato lo pide Y el archivo lo tiene)
+                if ((format === 'pdf' || format === 'both') && file.hasPdf) {
                     const pdfBlob = await invoicesApi.downloadPdf(file.rawId);
                     targetFolder.file(`${finalFileName}.pdf`, pdfBlob);
                 }
 
-                // 2. JSON
-                if (format === 'json' || format === 'both') {
+                // 2. JSON (Solo si el formato lo pide Y el archivo lo tiene)
+                if ((format === 'json' || format === 'both') && file.hasJson) {
                     const jsonBlob = await invoicesApi.downloadJson(file.rawId);
                     targetFolder.file(`${finalFileName}.json`, jsonBlob);
                 }
