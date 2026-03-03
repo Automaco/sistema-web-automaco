@@ -71,8 +71,7 @@ export const ActivationCodesPage = () => {
             const response = await authService.confirmPassword(securityModal.password);
 
             const responseData = response;
-            // Si no hay error, la contraseña es correcta
-            setNewCode(securityModal.targetCodeString); // se muestra el codigo
+           
 
             setRevealedCodes(prev => ({
                 ...prev,
