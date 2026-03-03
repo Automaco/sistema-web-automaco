@@ -1,5 +1,9 @@
 import { httpClient } from '../utils/http-client';
+<<<<<<< Updated upstream
 import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload, type ActivacionErrorResponse, type ActivateAccountPayload, type ActivateAccountResponse } from '../types/auth.types';
+=======
+import { type LoginResponse, type LoginCredentials, type RegisterPayload, type RegisterResponse, type AuthMessageResponse, type ForgotPasswordPayload, type ResetPasswordPayload, type ActivateAccountPayload, type ActivateAccountResponse, type ConfirmPasswordPaylad, type ConfirmPasswordResponse} from '../types/auth.types';
+>>>>>>> Stashed changes
 
 export const authApi = {
     /**
@@ -33,6 +37,11 @@ export const authApi = {
     activationAccount: (payload: ActivateAccountPayload) => {
         return httpClient.post<ActivateAccountResponse>('/activate', payload);
     },
+    //Endpoint verificaion de contraseña
+    confirmPass: (payload: ConfirmPasswordPaylad) =>{
+        return httpClient.post<ConfirmPasswordResponse>('/confirm-password', payload);
+    },
+
     /**
      * Endpoint para cerrar sesión
      * POST /logout

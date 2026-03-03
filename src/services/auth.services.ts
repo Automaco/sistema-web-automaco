@@ -1,5 +1,5 @@
 import { authApi } from '../api/auth.api';
-import type { LoginResponse, RegisterResponse, RegisterPayload, AuthMessageResponse, ResetPasswordPayload, ForgotPasswordPayload, ActivateAccountPayload, ActivateAccountResponse } from '../types/auth.types';
+import type { LoginResponse, RegisterResponse, RegisterPayload, AuthMessageResponse, ResetPasswordPayload, ForgotPasswordPayload, ActivateAccountPayload, ActivateAccountResponse, ConfirmPasswordResponse } from '../types/auth.types';
 import { type User } from '../types/auth.types';
 import { httpClient } from '../utils/http-client';
 
@@ -97,6 +97,10 @@ export const authService = {
         }
 
         return response;
+    },
+    // Verificacion de contraseña para acceso de campo de codigo
+    confirmPassword: async (password: string): Promise<ConfirmPasswordResponse> => {
+        return await authApi.confirmPass({ password });
     },
 
     /**

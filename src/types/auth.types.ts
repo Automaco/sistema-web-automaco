@@ -93,3 +93,10 @@ export interface ActivacionErrorResponse {
     message: string;
     error?: string;
 }
+// Confirmacion de password
+export interface ConfirmPasswordPaylad {
+    password: string;
+}
+export interface ConfirmPasswordResponse {
+    message: string;
+}
